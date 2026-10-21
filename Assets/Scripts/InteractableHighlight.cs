@@ -1,9 +1,9 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class InteractableHighlight : MonoBehaviour
 {
     [Header("Glow Settings")]
-    [SerializeField] private Color glowColor = new Color(1f, 0.85f, 0.1f, 1f); // Altýn sarýsý
+    [SerializeField] private Color glowColor = new Color(1f, 0.85f, 0.1f, 1f); // AltÄ±n sarÄ±sÄ±
     [SerializeField][Range(0f, 3f)] private float emissionIntensity = 1.2f;
 
     private Renderer[] renderers;
@@ -16,7 +16,7 @@ public class InteractableHighlight : MonoBehaviour
 
     private void Awake()
     {
-        // Objenin ve alt parçalarýnýn tüm Renderer bileþenlerini al
+        // Objenin ve alt parÃ§alarÄ±nÄ±n tÃ¼m Renderer bileÅŸenlerini al
         renderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[renderers.Length][];
 
@@ -49,7 +49,7 @@ public class InteractableHighlight : MonoBehaviour
             {
                 if (highlight)
                 {
-                    // Rengi sarýya çek ve parlama (Emission) aç
+                    // Rengi sarÄ±ya Ã§ek ve parlama (Emission) aÃ§
                     if (mats[j].HasProperty(BaseColorProp))
                         mats[j].SetColor(BaseColorProp, glowColor);
                     if (mats[j].HasProperty(ColorProp))
@@ -60,7 +60,7 @@ public class InteractableHighlight : MonoBehaviour
                 }
                 else
                 {
-                    // Orijinal rengine döndür ve parlamayý kapat
+                    // Orijinal rengine dÃ¶ndÃ¼r ve parlamayÄ± kapat
                     if (mats[j].HasProperty(BaseColorProp))
                         mats[j].SetColor(BaseColorProp, originalColors[i][j]);
                     if (mats[j].HasProperty(ColorProp))
@@ -75,7 +75,7 @@ public class InteractableHighlight : MonoBehaviour
 
     private void OnDisable()
     {
-        // Obje alýndýðýnda veya kapandýðýnda parlamayý sýfýrla
+        // Obje alÄ±ndÄ±ÄŸÄ±nda veya kapandÄ±ÄŸÄ±nda parlamayÄ± sÄ±fÄ±rla
         SetHighlight(false);
     }
 }
