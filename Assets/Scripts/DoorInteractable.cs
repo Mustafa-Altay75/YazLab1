@@ -1,14 +1,14 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class DoorInteractable : MonoBehaviour, IInteractable
 {
     [Header("Door Hinge Settings")]
-    [SerializeField] private Transform doorHinge; // Döndürülecek kapı kanadı veya menteşe objesi
+    [SerializeField] private Transform doorHinge; // DÃ¶ndÃ¼rÃ¼lecek kapÄ± kanadÄ± veya menteÅŸe objesi
     [SerializeField] private Vector3 openRotationOffset = new Vector3(0f, 90f, 0f);
     [SerializeField] private float openSpeed = 3f;
 
     [Header("Lock Settings")]
-    [Tooltip("True ise oyuncu E ile açamaz, sadece dışarıdan iskelet açabilir.")]
+    [Tooltip("True ise oyuncu E ile aÃ§amaz, sadece dÄ±ÅŸarÄ±dan iskelet aÃ§abilir.")]
     [SerializeField] private bool requiresSkeletonOrUnlock = true;
 
     private bool isOpen = false;
@@ -32,27 +32,27 @@ public class DoorInteractable : MonoBehaviour, IInteractable
     {
         if (isOpen) return string.Empty;
 
-        // Kapı kilitliyse oyuncuya ekranda neden açamadığını göster
+        // KapÄ± kilitliyse oyuncuya ekranda neden aÃ§amadÄ±ÄŸÄ±nÄ± gÃ¶ster
         if (requiresSkeletonOrUnlock)
         {
-            return "Kapı dışarıdan kilitli! (İskelet açmalı)";
+            return "KapÄ± dÄ±ÅŸarÄ±dan kilitli! (Ä°skelet aÃ§malÄ±)";
         }
 
-        return "[E] Kapıyı Aç";
+        return "[E] KapÄ±yÄ± AÃ§";
     }
 
     public void Interact(GameObject interactor)
     {
         if (isOpen) return;
 
-        // Eğer etkileşime giren obje Oyuncu (PlayerController) ise ve kapı kilitliyse açılmasına izin verme
+        // EÄŸer etkileÅŸime giren obje Oyuncu (PlayerController) ise ve kapÄ± kilitliyse aÃ§Ä±lmasÄ±na izin verme
         if (requiresSkeletonOrUnlock && interactor != null && interactor.GetComponent<PlayerController>() != null)
         {
-            Debug.Log("Bu kapı dışarıdan kilitli! Minik iskeleti göndererek açtırmalısın.");
+            Debug.Log("Bu kapÄ± dÄ±ÅŸarÄ±dan kilitli! Minik iskeleti gÃ¶ndererek aÃ§tÄ±rmalÄ±sÄ±n.");
             return;
         }
 
-        // Etkileşime giren Minik İskelet ise (veya kilit kalktıysa) kapıyı aç
+        // EtkileÅŸime giren Minik Ä°skelet ise (veya kilit kalktÄ±ysa) kapÄ±yÄ± aÃ§
         OpenDoor();
     }
 
@@ -61,7 +61,7 @@ public class DoorInteractable : MonoBehaviour, IInteractable
         requiresSkeletonOrUnlock = false;
         isOpen = true;
 
-        // Kapı açıldıktan sonra sarı parlama (Highlight) efektini kapat
+        // KapÄ± aÃ§Ä±ldÄ±ktan sonra sarÄ± parlama (Highlight) efektini kapat
         InteractableHighlight highlight = GetComponent<InteractableHighlight>();
         if (highlight != null)
         {

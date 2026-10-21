@@ -1,10 +1,10 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class ChestInteractable : MonoBehaviour, IInteractable
 {
     [Header("Hinge Settings")]
-    [SerializeField] private Transform chestLid;         // Sandığın sadece üst kapağı (chest_lid)
-    [SerializeField] private Vector3 openRotationOffset = new Vector3(-105f, 0f, 0f); // Kapağın geriye açılma açısı
+    [SerializeField] private Transform chestLid;         // SandÄ±ÄŸÄ±n sadece Ã¼st kapaÄŸÄ± (chest_lid)
+    [SerializeField] private Vector3 openRotationOffset = new Vector3(-105f, 0f, 0f); // KapaÄŸÄ±n geriye aÃ§Ä±lma aÃ§Ä±sÄ±
     [SerializeField] private float openSpeed = 4f;
 
     private bool isOpen = false;
@@ -28,7 +28,7 @@ public class ChestInteractable : MonoBehaviour, IInteractable
 
     public string GetInteractPrompt()
     {
-        return isOpen ? "Sandık Açıldı" : "[E] Sandığı Aç";
+        return isOpen ? "SandÄ±k AÃ§Ä±ldÄ±" : "[E] SandÄ±ÄŸÄ± AÃ§";
     }
 
     public void Interact(GameObject interactor)
@@ -39,7 +39,7 @@ public class ChestInteractable : MonoBehaviour, IInteractable
         {
             if (!inventory.HasChestKey)
             {
-                Debug.Log("Sandık kilitli! Önce kırık masanın üzerindeki anahtarı almalısın.");
+                Debug.Log("SandÄ±k kilitli! Ã–nce kÄ±rÄ±k masanÄ±n Ã¼zerindeki anahtarÄ± almalÄ±sÄ±n.");
                 return;
             }
 

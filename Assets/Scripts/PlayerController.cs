@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
@@ -25,7 +25,7 @@ public class PlayerController : MonoBehaviour
         if (controller == null) controller = GetComponent<CharacterController>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
 
-        // Sahnedeki ana kamerayý referans al
+        // Sahnedeki ana kamerayÄ± referans al
         if (cameraTransform == null && Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
@@ -52,7 +52,7 @@ public class PlayerController : MonoBehaviour
 
         inputVector = inputVector.normalized;
 
-        // Saldýrý tetikleme
+        // SaldÄ±rÄ± tetikleme
         if ((Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) || keyboard.spaceKey.wasPressedThisFrame)
         {
             if (animator != null) animator.SetTrigger(AttackHash);
@@ -65,7 +65,7 @@ public class PlayerController : MonoBehaviour
 
         if (inputVector.magnitude >= 0.1f)
         {
-            // Kamera yönüne göre hareket vektörünü hesapla (Y ekseni sýfýrlanýr)
+            // Kamera yÃ¶nÃ¼ne gÃ¶re hareket vektÃ¶rÃ¼nÃ¼ hesapla (Y ekseni sÄ±fÄ±rlanÄ±r)
             Vector3 camForward = cameraTransform.forward;
             Vector3 camRight = cameraTransform.right;
             camForward.y = 0f;
@@ -75,7 +75,7 @@ public class PlayerController : MonoBehaviour
 
             moveDirection = (camForward * inputVector.y + camRight * inputVector.x).normalized;
 
-            // Karakteri hareket yönüne döndür
+            // Karakteri hareket yÃ¶nÃ¼ne dÃ¶ndÃ¼r
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
 
@@ -83,7 +83,7 @@ public class PlayerController : MonoBehaviour
             controller.Move(moveDirection * (moveSpeed * Time.deltaTime));
         }
 
-        // Animasyon geçiþi için hýz parametresi
+        // Animasyon geÃ§iÅŸi iÃ§in hÄ±z parametresi
         if (animator != null)
         {
             animator.SetFloat(SpeedHash, inputVector.magnitude, 0.05f, Time.deltaTime);
@@ -101,7 +101,7 @@ public class PlayerController : MonoBehaviour
             verticalVelocity.y += gravity * Time.deltaTime;
         }
 
-        // Düþey yerçekimi hareketi
+        // DÃ¼ÅŸey yerÃ§ekimi hareketi
         controller.Move(verticalVelocity * Time.deltaTime);
     }
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
 
@@ -12,12 +12,12 @@ public class NoteInteractable : MonoBehaviour, IInteractable
     [TextArea(5, 10)]
     [SerializeField]
     private string noteText =
-        "\"Benden sonra bu hücreye düşecek kader ortağıma...\n\n" +
-        "Uzun süredir bu soğuk zindanda tutsağım. Hücreyi incelerken duvardaki bayrağın arkasında gizli bir bölme olduğunu keşfettim. " +
-        "İçeride kilitli bir sandık ve sandığın içinde bir asa ile büyü kitabı var. " +
-        "Ne yazık ki ben bir büyücü değilim, bu emanetlerin gücünü uyandıramadım.\n\n" +
-        "Eğer asayı ve kitabı kullanabilecek kudrete sahipsen, sandığın anahtarını içerideki kırık masanın üzerine bıraktım. Onları al ve buradan kurtul\n\n" +
-        "[Kapatmak için tekrar E tuşuna bas veya uzaklaş]\"";
+        "\"Benden sonra bu hÃ¼creye dÃ¼ÅŸecek kader ortaÄŸÄ±ma...\n\n" +
+        "Uzun sÃ¼redir bu soÄŸuk zindanda tutsaÄŸÄ±m. HÃ¼creyi incelerken duvardaki bayraÄŸÄ±n arkasÄ±nda gizli bir bÃ¶lme olduÄŸunu keÅŸfettim. " +
+        "Ä°Ã§eride kilitli bir sandÄ±k ve sandÄ±ÄŸÄ±n iÃ§inde bir asa ile bÃ¼yÃ¼ kitabÄ± var. " +
+        "Ne yazÄ±k ki ben bir bÃ¼yÃ¼cÃ¼ deÄŸilim, bu emanetlerin gÃ¼cÃ¼nÃ¼ uyandÄ±ramadÄ±m.\n\n" +
+        "EÄŸer asayÄ± ve kitabÄ± kullanabilecek kudrete sahipsen, sandÄ±ÄŸÄ±n anahtarÄ±nÄ± iÃ§erideki kÄ±rÄ±k masanÄ±n Ã¼zerine bÄ±raktÄ±m. OnlarÄ± al ve buradan kurtul\n\n" +
+        "[Kapatmak iÃ§in tekrar E tuÅŸuna bas veya uzaklaÅŸ]\"";
 
     [Header("Settings")]
     [SerializeField] private float autoCloseDistance = 3.0f;
@@ -40,7 +40,7 @@ public class NoteInteractable : MonoBehaviour, IInteractable
     {
         if (!isReading) return;
 
-        // Oyuncu raftan uzaklaşırsa notu otomatik kapat
+        // Oyuncu raftan uzaklaÅŸÄ±rsa notu otomatik kapat
         if (playerTransform != null)
         {
             float distance = Vector3.Distance(transform.position, playerTransform.position);

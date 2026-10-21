@@ -1,8 +1,8 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class KeyPickup : MonoBehaviour, IInteractable
 {
-    [SerializeField] private string promptText = "[E] Anahtarý Al";
+    [SerializeField] private string promptText = "[E] AnahtarÄ± Al";
 
     public string GetInteractPrompt() => promptText;
 
@@ -11,7 +11,7 @@ public class KeyPickup : MonoBehaviour, IInteractable
         if (interactor.TryGetComponent<PlayerInventory>(out PlayerInventory inventory))
         {
             inventory.CollectKey();
-            // Anahtarý masadan yok et
+            // AnahtarÄ± masadan yok et
             gameObject.SetActive(false);
         }
     }

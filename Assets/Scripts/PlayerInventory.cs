@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -11,7 +11,7 @@ public class PlayerInventory : MonoBehaviour
 
     private void Start()
     {
-        // Oyun baþýnda karakter silahsýz baþlar
+        // Oyun baÅŸÄ±nda karakter silahsÄ±z baÅŸlar
         if (staffInRightHand != null) staffInRightHand.SetActive(false);
         if (spellbookInLeftHand != null) spellbookInLeftHand.SetActive(false);
     }
@@ -19,7 +19,7 @@ public class PlayerInventory : MonoBehaviour
     public void CollectKey()
     {
         HasChestKey = true;
-        Debug.Log("Masadaki anahtar alýndý!");
+        Debug.Log("Masadaki anahtar alÄ±ndÄ±!");
     }
 
     public void EquipMageGear()
@@ -27,6 +27,6 @@ public class PlayerInventory : MonoBehaviour
         IsArmed = true;
         if (staffInRightHand != null) staffInRightHand.SetActive(true);
         if (spellbookInLeftHand != null) spellbookInLeftHand.SetActive(true);
-        Debug.Log("Asa ve Büyü Kitabý kuþanýldý!");
+        Debug.Log("Asa ve BÃ¼yÃ¼ KitabÄ± kuÅŸanÄ±ldÄ±!");
     }
 }

@@ -1,34 +1,34 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class SkeletonInteractable : MonoBehaviour, IInteractable
 {
-    [Header("Animasyon Ayarlarý")]
+    [Header("Animasyon AyarlarÄ±")]
     [SerializeField] private Animator skeletonAnimator;
     [SerializeField] private string resurrectTrigger = "Resurrect";
     [SerializeField] private string playerSummonTrigger = "Summon";
 
-    // Arkadaþýnýn NavMesh scriptinden kontrol edebilmesi için public özellik
+    // ArkadaÅŸÄ±nÄ±n NavMesh scriptinden kontrol edebilmesi iÃ§in public Ã¶zellik
     public bool IsResurrected { get; private set; } = false;
 
     private PlayerInventory cachedInventory;
 
     public string GetInteractPrompt()
     {
-        // Dirildiyse ekranda bir þey yazmasýn
+        // Dirildiyse ekranda bir ÅŸey yazmasÄ±n
         if (IsResurrected) return string.Empty;
 
         if (cachedInventory == null)
         {
-            cachedInventory = FindFirstObjectByType<PlayerInventory>();
+            cachedInventory = FindAnyObjectByType<PlayerInventory>();
         }
 
-        // Asa ve büyü kitabý alýnmadýysa uyarý ver
+        // Asa ve bÃ¼yÃ¼ kitabÄ± alÄ±nmadÄ±ysa uyarÄ± ver
         if (cachedInventory != null && !cachedInventory.IsArmed)
         {
-            return "Diriltmek için Asa ve Büyü Kitabý gerekli!";
+            return "Diriltmek iÃ§in Asa ve BÃ¼yÃ¼ KitabÄ± gerekli!";
         }
 
-        return "[E] Ýskeleti Dirilt";
+        return "[E] Ä°skeleti Dirilt";
     }
 
     public void Interact(GameObject interactor)
@@ -40,20 +40,20 @@ public class SkeletonInteractable : MonoBehaviour, IInteractable
 
         IsResurrected = true;
 
-        // 1. Büyücünün çaðýrma (Summon) animasyonunu oynat
+        // 1. BÃ¼yÃ¼cÃ¼nÃ¼n Ã§aÄŸÄ±rma (Summon) animasyonunu oynat
         Animator playerAnimator = interactor.GetComponentInChildren<Animator>();
         if (playerAnimator != null)
         {
             playerAnimator.SetTrigger(playerSummonTrigger);
         }
 
-        // 2. Ýskeletin yerden kalkma (Resurrect) animasyonunu oynat
+        // 2. Ä°skeletin yerden kalkma (Resurrect) animasyonunu oynat
         if (skeletonAnimator != null)
         {
             skeletonAnimator.SetTrigger(resurrectTrigger);
         }
 
-        // 3. Sarý parlama (Highlight) efektini kapat
+        // 3. SarÄ± parlama (Highlight) efektini kapat
         InteractableHighlight highlight = GetComponent<InteractableHighlight>();
         if (highlight != null)
         {

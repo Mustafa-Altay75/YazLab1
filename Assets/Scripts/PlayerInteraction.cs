@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
 
@@ -23,7 +23,7 @@ public class PlayerInteraction : MonoBehaviour
             if (currentInteractable != null)
             {
                 currentInteractable.Interact(gameObject);
-                // Etkileşim sonrası metin ve parlamayı anında güncelle
+                // EtkileÅŸim sonrasÄ± metin ve parlamayÄ± anÄ±nda gÃ¼ncelle
                 DetectInteractable();
             }
         }
@@ -43,11 +43,11 @@ public class PlayerInteraction : MonoBehaviour
         {
             if (!hit.gameObject.activeInHierarchy) continue;
 
-            // Objenin kendisinde veya üst objesinde IInteractable var mı bak
+            // Objenin kendisinde veya Ã¼st objesinde IInteractable var mÄ± bak
             IInteractable interactable = hit.GetComponentInParent<IInteractable>();
             if (interactable != null)
             {
-                // Eğer kapı/sandık zaten açılmışsa ve mesajı boşsa etkileşime alma
+                // EÄŸer kapÄ±/sandÄ±k zaten aÃ§Ä±lmÄ±ÅŸsa ve mesajÄ± boÅŸsa etkileÅŸime alma
                 if (string.IsNullOrEmpty(interactable.GetInteractPrompt())) continue;
 
                 float dist = Vector3.Distance(transform.position, hit.transform.position);
@@ -60,13 +60,13 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
 
-        // Önceki objeden uzaklaşıldıysa parlamasını kapat
+        // Ã–nceki objeden uzaklaÅŸÄ±ldÄ±ysa parlamasÄ±nÄ± kapat
         if (currentHighlight != null && currentHighlight != foundHighlight)
         {
             currentHighlight.SetHighlight(false);
         }
 
-        // Yeni objeye yaklaşıldıysa parlamasını aç
+        // Yeni objeye yaklaÅŸÄ±ldÄ±ysa parlamasÄ±nÄ± aÃ§
         if (foundHighlight != null)
         {
             foundHighlight.SetHighlight(true);
@@ -75,7 +75,7 @@ public class PlayerInteraction : MonoBehaviour
         currentInteractable = foundInteractable;
         currentHighlight = foundHighlight;
 
-        // Ekran yazısını güncelle
+        // Ekran yazÄ±sÄ±nÄ± gÃ¼ncelle
         if (promptTextUI != null)
         {
             promptTextUI.text = currentInteractable != null ? currentInteractable.GetInteractPrompt() : "";

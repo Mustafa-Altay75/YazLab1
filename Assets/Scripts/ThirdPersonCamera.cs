@@ -1,22 +1,22 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class ThirdPersonCamera : MonoBehaviour
 {
     [Header("Target & Framing")]
     [SerializeField] private Transform target;           // Takip edilecek karakter (Mage)
-    [SerializeField] private float height = 1.4f;        // Omuz / baş hizası yüksekliği
+    [SerializeField] private float height = 1.4f;        // Omuz / baÅŸ hizasÄ± yÃ¼ksekliÄŸi
     [SerializeField] private float distance = 3.2f;      // Karakterden geriye mesafe
 
     [Header("Mouse Sensitivity")]
-    [SerializeField] private float sensitivityX = 0.15f; // Sağa-sola dönüş hızı
-    [SerializeField] private float sensitivityY = 0.15f; // Yukarı-aşağı bakış hızı
-    [SerializeField] private float minPitch = -15f;      // Aşağı bakış sınırı
-    [SerializeField] private float maxPitch = 60f;       // Yukarı bakış sınırı
+    [SerializeField] private float sensitivityX = 0.15f; // SaÄŸa-sola dÃ¶nÃ¼ÅŸ hÄ±zÄ±
+    [SerializeField] private float sensitivityY = 0.15f; // YukarÄ±-aÅŸaÄŸÄ± bakÄ±ÅŸ hÄ±zÄ±
+    [SerializeField] private float minPitch = -15f;      // AÅŸaÄŸÄ± bakÄ±ÅŸ sÄ±nÄ±rÄ±
+    [SerializeField] private float maxPitch = 60f;       // YukarÄ± bakÄ±ÅŸ sÄ±nÄ±rÄ±
 
     [Header("Wall & Ceiling Collision")]
-    [SerializeField] private float cameraRadius = 0.2f;  // Kameranın duvarlara girmemesi için çarpışma çapı
-    [SerializeField] private float minDistance = 0.5f;   // Duvara sıkışınca karaktere en fazla ne kadar yaklaşsın
+    [SerializeField] private float cameraRadius = 0.2f;  // KameranÄ±n duvarlara girmemesi iÃ§in Ã§arpÄ±ÅŸma Ã§apÄ±
+    [SerializeField] private float minDistance = 0.5f;   // Duvara sÄ±kÄ±ÅŸÄ±nca karaktere en fazla ne kadar yaklaÅŸsÄ±n
 
     private float yaw;
     private float pitch;
@@ -62,13 +62,13 @@ public class ThirdPersonCamera : MonoBehaviour
         Vector3 pivotPosition = target.position + Vector3.up * height;
         Vector3 direction = -(targetRotation * Vector3.forward);
 
-        // Duvar veya tavan kontrolü: Kamera ile karakter arasına duvar girerse kamerayı öne çek
+        // Duvar veya tavan kontrolÃ¼: Kamera ile karakter arasÄ±na duvar girerse kamerayÄ± Ã¶ne Ã§ek
         float finalDistance = distance;
         RaycastHit[] hits = Physics.SphereCastAll(pivotPosition, cameraRadius, direction, distance);
 
         foreach (RaycastHit hit in hits)
         {
-            // Karakterin kendi collider'ını ve trigger'ları yoksay
+            // Karakterin kendi collider'Ä±nÄ± ve trigger'larÄ± yoksay
             if (hit.transform == target || hit.transform.IsChildOf(target) || hit.collider.isTrigger)
                 continue;
 
@@ -78,7 +78,7 @@ public class ThirdPersonCamera : MonoBehaviour
             }
         }
 
-        // Yaylanma olmadan doğrudan yörüngeye oturt
+        // Yaylanma olmadan doÄŸrudan yÃ¶rÃ¼ngeye oturt
         transform.rotation = targetRotation;
         transform.position = pivotPosition + direction * finalDistance;
     }
