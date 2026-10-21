@@ -3,3 +3,4 @@
 *.mat linguist-detectable=false
 *.shader linguist-detectable=false
 *.shadergraph linguist-detectable=false
+*.hlsl linguist-detectable=false
