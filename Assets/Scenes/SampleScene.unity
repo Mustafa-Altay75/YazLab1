@@ -188,6 +188,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 18f7e77c08a6fa64ea84ff071e586b27, type: 3}
+--- !u!1 &18674529 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 18f7e77c08a6fa64ea84ff071e586b27, type: 3}
+  m_PrefabInstance: {fileID: 18674528}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &25083382
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8345,6 +8350,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1585690085}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1585690086}
   m_SourcePrefab: {fileID: 100100000, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
 --- !u!1001 &1258312390
 PrefabInstance:
@@ -9890,6 +9898,29 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &1585690086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1585690081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1d418f6beec0a943ae56f1b9f3ececd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkeletonCompanion
+  interactable: {fileID: 1585690082}
+  skeletonAnimator: {fileID: 1585690084}
+  keyObject: {fileID: 18674529}
+  door: {fileID: 73262262}
+  acceptRadius: 1.5
+  pickUpDuration: 1
+  retryDelay: 2
+  walkParameter: IsWalking
+  walkSpeedThreshold: 0.1
+  logTransitions: 1
+  currentStateName: '-'
 --- !u!1001 &1590114167
 PrefabInstance:
   m_ObjectHideFlags: 0
