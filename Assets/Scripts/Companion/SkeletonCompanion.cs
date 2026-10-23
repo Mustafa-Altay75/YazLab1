@@ -62,6 +62,25 @@ public class SkeletonCompanion : MonoBehaviour
     /// <summary>Dışarıdan okunabilsin diye; testlerde ve arayüzde kullanılır.</summary>
     public string CurrentStateName => currentStateName;
 
+    /// <summary>Oyuncu "anahtarı getir" emrini verdi mi.</summary>
+    public bool OrderGiven => context != null && context.OrderGiven;
+
+    /// <summary>
+    /// Oyuncunun emrini iletir. SkeletonOrderInteractable buradan çağırıyor;
+    /// iskeletin yola çıkması bu çağrıya bağlı.
+    /// </summary>
+    public void GiveOrder()
+    {
+        if (context == null || context.OrderGiven) return;
+
+        context.OrderGiven = true;
+
+        if (logTransitions)
+        {
+            Debug.Log("İskelete emir verildi: anahtarı getir.", this);
+        }
+    }
+
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();

@@ -6,6 +6,8 @@ using UnityEngine;
 /// bitmesini bekler. Bunun için sabit bir süre saymak yerine animatörün
 /// Skeletons_Idle durumuna düşmesi beklenir, çünkü animasyon süresi
 /// değişirse sabit süre tutmaz.
+///
+/// Kalkma bitince de kendiliğinden yola çıkmaz; emir beklemeye geçer.
 /// </summary>
 public class InactiveState : ISkeletonState
 {
@@ -34,7 +36,7 @@ public class InactiveState : ISkeletonState
             }
         }
 
-        return context.MoveToKey;
+        return context.WaitingForOrder;
     }
 
     public void Exit(SkeletonContext context)

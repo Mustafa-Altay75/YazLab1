@@ -36,9 +36,13 @@ public class SkeletonContext
     /// <summary>Anahtar alındı mı.</summary>
     public bool HasKey { get; set; }
 
+    /// <summary>Oyuncu "anahtarı getir" emrini verdi mi.</summary>
+    public bool OrderGiven { get; set; }
+
     // --- Durum örnekleri ---
     // Her karede yeni nesne üretmemek için durumlar bir kez oluşturulur.
     public ISkeletonState Inactive { get; }
+    public ISkeletonState WaitingForOrder { get; }
     public ISkeletonState MoveToKey { get; }
     public ISkeletonState PickUpKey { get; }
     public ISkeletonState MoveToDoor { get; }
@@ -68,6 +72,7 @@ public class SkeletonContext
         LogTransitions = logTransitions;
 
         Inactive = new InactiveState();
+        WaitingForOrder = new WaitingForOrderState();
         MoveToKey = new MoveToKeyState();
         PickUpKey = new PickUpKeyState();
         MoveToDoor = new MoveToDoorState();
