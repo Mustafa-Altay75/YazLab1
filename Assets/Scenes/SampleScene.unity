@@ -9088,6 +9088,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1585690086}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1585690087}
   m_SourcePrefab: {fileID: 100100000, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
 --- !u!4 &1256222656 stripped
 Transform:
@@ -10729,13 +10732,38 @@ MonoBehaviour:
   skeletonAnimator: {fileID: 1585690084}
   keyObject: {fileID: 18674529}
   door: {fileID: 73262262}
+  sensor: {fileID: 1585690087}
   acceptRadius: 1.5
   pickUpDuration: 1
   retryDelay: 2
+  stuckThreshold: 1.5
+  stepBackDistance: 2.2
+  stepBackTimeout: 4
   walkParameter: IsWalking
   walkSpeedThreshold: 0.1
   logTransitions: 1
   currentStateName: '-'
+--- !u!114 &1585690087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1585690081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bda87ea51459d3f4ab8e36a021ce74c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkeletonSensor
+  rayCount: 5
+  spreadAngle: 70
+  forwardRange: 2.5
+  eyeHeight: 0.5
+  groundRange: 1.2
+  obstacleMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  drawGizmos: 1
 --- !u!1 &1589900943
 GameObject:
   m_ObjectHideFlags: 0

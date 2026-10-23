@@ -21,7 +21,8 @@ public class UnlockDoorState : ISkeletonState
 
     public ISkeletonState Tick(SkeletonContext context)
     {
-        return context.Completed;
+        // Kapı açıldı; kanadın içinde kalmamak için geri çekil.
+        return context.StepBack;
     }
 
     public void Exit(SkeletonContext context)

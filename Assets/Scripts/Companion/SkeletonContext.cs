@@ -19,6 +19,9 @@ public class SkeletonContext
     /// <summary>Açılacak hücre kapısı.</summary>
     public DoorInteractable Door { get; }
 
+    /// <summary>Çevreyi raycast ile gözleyen sensör.</summary>
+    public SkeletonSensor Sensor { get; }
+
     // --- Ayarlar ---
     /// <summary>Hedefe bu mesafeden yakınsa "vardı" sayılır.</summary>
     public float AcceptRadius { get; }
@@ -28,6 +31,15 @@ public class SkeletonContext
 
     /// <summary>Yol bulunamadığında yeniden denemeden önce beklenecek süre (saniye).</summary>
     public float RetryDelay { get; }
+
+    /// <summary>Ajan bu kadar süre kıpırdamazsa takılmış sayılır (saniye).</summary>
+    public float StuckThreshold { get; }
+
+    /// <summary>Kapıyı açtıktan sonra kapıdan bu kadar uzağa çekilir (birim).</summary>
+    public float StepBackDistance { get; }
+
+    /// <summary>Geri çekilme bu süreden uzun sürerse olduğu yerde kalır (saniye).</summary>
+    public float StepBackTimeout { get; }
 
     /// <summary>Durum geçişleri konsola yazılsın mı.</summary>
     public bool LogTransitions { get; }
@@ -39,6 +51,15 @@ public class SkeletonContext
     /// <summary>Oyuncu "anahtarı getir" emrini verdi mi.</summary>
     public bool OrderGiven { get; set; }
 
+    /// <summary>Kaç kez takıldığı. Testlerde ve raporda kullanılıyor.</summary>
+    public int StuckCount { get; private set; }
+
+    /// <summary>Kaç kez yeniden yol istendiği.</summary>
+    public int RepathCount { get; private set; }
+
+    // Ajanın ne zamandır kıpırdamadığı. -1 ise hareket hâlinde.
+    private float stoppedSince = -1f;
+
     // --- Durum örnekleri ---
     // Her karede yeni nesne üretmemek için durumlar bir kez oluşturulur.
     public ISkeletonState Inactive { get; }
@@ -47,6 +68,7 @@ public class SkeletonContext
     public ISkeletonState PickUpKey { get; }
     public ISkeletonState MoveToDoor { get; }
     public ISkeletonState UnlockDoor { get; }
+    public ISkeletonState StepBack { get; }
     public ISkeletonState Completed { get; }
     public ISkeletonState Blocked { get; }
 
@@ -56,9 +78,13 @@ public class SkeletonContext
         SkeletonInteractable interactable,
         GameObject keyObject,
         DoorInteractable door,
+        SkeletonSensor sensor,
         float acceptRadius,
         float pickUpDuration,
         float retryDelay,
+        float stuckThreshold,
+        float stepBackDistance,
+        float stepBackTimeout,
         bool logTransitions)
     {
         Agent = agent;
@@ -66,9 +92,13 @@ public class SkeletonContext
         Interactable = interactable;
         KeyObject = keyObject;
         Door = door;
+        Sensor = sensor;
         AcceptRadius = acceptRadius;
         PickUpDuration = pickUpDuration;
         RetryDelay = retryDelay;
+        StuckThreshold = stuckThreshold;
+        StepBackDistance = stepBackDistance;
+        StepBackTimeout = stepBackTimeout;
         LogTransitions = logTransitions;
 
         Inactive = new InactiveState();
@@ -77,6 +107,7 @@ public class SkeletonContext
         PickUpKey = new PickUpKeyState();
         MoveToDoor = new MoveToDoorState();
         UnlockDoor = new UnlockDoorState();
+        StepBack = new StepBackState();
         Completed = new CompletedState();
         Blocked = new BlockedState();
     }
@@ -136,5 +167,77 @@ public class SkeletonContext
             Agent.isStopped = true;
             Agent.ResetPath();
         }
+        ResetStuck();
+    }
+
+    /// <summary>
+    /// Ajan hedefe gitmeye çalışırken kıpırdamıyorsa takılmış sayılır.
+    /// Yürüyen durumlar her karede çağırır; varış kontrolünden SONRA
+    /// çağrılmalı, yoksa hedefe varıp duran ajan takılmış görünür.
+    /// </summary>
+    public bool IsStuck()
+    {
+        if (Agent == null || !Agent.isOnNavMesh || Agent.pathPending)
+        {
+            stoppedSince = -1f;
+            return false;
+        }
+
+        if (Agent.velocity.magnitude >= 0.05f)
+        {
+            stoppedSince = -1f;
+            return false;
+        }
+
+        if (stoppedSince < 0f)
+        {
+            stoppedSince = Time.time;
+            return false;
+        }
+
+        if (Time.time - stoppedSince < StuckThreshold) return false;
+
+        stoppedSince = -1f;
+        StuckCount++;
+        return true;
+    }
+
+    /// <summary>
+    /// İskeleti kapıya döndürür ve ajanın dönüş kontrolünü kapatır.
+    ///
+    /// Kapatmak şart: NavMeshAgent kendi dönüşünü sürüyor ve biz rotasyonu
+    /// elle yazsak bile sonraki karede kalan hıza göre geri çeviriyor.
+    /// Görev bittiği için dönüş kontrolünü bırakmasında sakınca yok.
+    /// </summary>
+    public void FaceDoor()
+    {
+        if (Agent == null || Door == null) return;
+
+        Agent.updateRotation = false;
+
+        Vector3 bak = Door.transform.position - Agent.transform.position;
+        bak.y = 0f;
+        if (bak.sqrMagnitude > 0.01f)
+        {
+            Agent.transform.rotation = Quaternion.LookRotation(bak.normalized);
+        }
+    }
+
+    /// <summary>Takılma sayacını sıfırlar.</summary>
+    public void ResetStuck()
+    {
+        stoppedSince = -1f;
+    }
+
+    /// <summary>
+    /// Mevcut hedefe yeniden yol ister. Takılmadan sonra çağrılıyor;
+    /// NavMesh aynı yolu verse bile ajan yeniden hızlanır.
+    /// </summary>
+    public bool Repath(Vector3 target)
+    {
+        RepathCount++;
+        ResetStuck();
+        if (Agent != null && Agent.isOnNavMesh) Agent.ResetPath();
+        return SetDestination(target);
     }
 }

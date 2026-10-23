@@ -5,10 +5,17 @@ using UnityEngine;
 /// </summary>
 public class MoveToDoorState : ISkeletonState
 {
+    /// <summary>Üst üste bu kadar yeniden yoldan sonra pes edilir.</summary>
+    private const int MaxRepath = 3;
+
     public string Name => "MoveToDoor";
+
+    private int repathTries;
 
     public void Enter(SkeletonContext context)
     {
+        repathTries = 0;
+
         if (context.Door == null)
         {
             return;
@@ -31,6 +38,21 @@ public class MoveToDoorState : ISkeletonState
 
         if (!context.HasArrived())
         {
+            if (context.IsStuck())
+            {
+                repathTries++;
+
+                if (context.LogTransitions)
+                {
+                    string olcum = context.Sensor != null ? context.Sensor.Ozet() : "sensör yok";
+                    Debug.LogWarning("İskelet kapıya giderken takıldı (" + repathTries + "/"
+                                     + MaxRepath + "). Sensör: " + olcum);
+                }
+
+                if (repathTries > MaxRepath) return context.Blocked;
+                if (!context.Repath(context.Door.transform.position)) return context.Blocked;
+            }
+
             return this;
         }
 

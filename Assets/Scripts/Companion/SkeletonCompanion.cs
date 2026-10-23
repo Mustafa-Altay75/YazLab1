@@ -29,6 +29,9 @@ public class SkeletonCompanion : MonoBehaviour
     [Tooltip("İskeletin açacağı hücre kapısı.")]
     [SerializeField] private DoorInteractable door;
 
+    [Tooltip("Boş bırakılırsa aynı objedeki SkeletonSensor kullanılır.")]
+    [SerializeField] private SkeletonSensor sensor;
+
     [Header("Davranış Ayarları")]
     [Tooltip("Hedefe bu mesafeden yakınsa vardı sayılır.")]
     [SerializeField] private float acceptRadius = 1.5f;
@@ -38,6 +41,15 @@ public class SkeletonCompanion : MonoBehaviour
 
     [Tooltip("Yol bulunamadığında yeniden denemeden önceki bekleme (saniye).")]
     [SerializeField] private float retryDelay = 2.0f;
+
+    [Tooltip("Ajan bu kadar süre kıpırdamazsa takılmış sayılır (saniye).")]
+    [SerializeField] private float stuckThreshold = 1.5f;
+
+    [Tooltip("Kapıyı açtıktan sonra kapıdan bu kadar uzağa çekilir (birim).")]
+    [SerializeField] private float stepBackDistance = 2.2f;
+
+    [Tooltip("Geri çekilme bu süreyi aşarsa olduğu yerde kalır (saniye).")]
+    [SerializeField] private float stepBackTimeout = 4.0f;
 
     [Header("Animasyon")]
     [Tooltip("Yürüme animasyonunu açan bool parametresinin adı.")]
@@ -65,6 +77,12 @@ public class SkeletonCompanion : MonoBehaviour
     /// <summary>Oyuncu "anahtarı getir" emrini verdi mi.</summary>
     public bool OrderGiven => context != null && context.OrderGiven;
 
+    /// <summary>Kaç kez takıldığı. Testlerde ve raporda kullanılıyor.</summary>
+    public int StuckCount => context != null ? context.StuckCount : 0;
+
+    /// <summary>Kaç kez yeniden yol istendiği.</summary>
+    public int RepathCount => context != null ? context.RepathCount : 0;
+
     /// <summary>
     /// Oyuncunun emrini iletir. SkeletonOrderInteractable buradan çağırıyor;
     /// iskeletin yola çıkması bu çağrıya bağlı.
@@ -87,6 +105,7 @@ public class SkeletonCompanion : MonoBehaviour
 
         if (interactable == null) interactable = GetComponent<SkeletonInteractable>();
         if (skeletonAnimator == null) skeletonAnimator = GetComponentInChildren<Animator>();
+        if (sensor == null) sensor = GetComponent<SkeletonSensor>();
 
         walkParameterHash = Animator.StringToHash(walkParameter);
         hasWalkParameter = HasParameter(skeletonAnimator, walkParameter);
@@ -104,9 +123,13 @@ public class SkeletonCompanion : MonoBehaviour
             interactable,
             keyObject,
             door,
+            sensor,
             acceptRadius,
             pickUpDuration,
             retryDelay,
+            stuckThreshold,
+            stepBackDistance,
+            stepBackTimeout,
             logTransitions);
 
         currentState = context.Inactive;
@@ -117,6 +140,10 @@ public class SkeletonCompanion : MonoBehaviour
     private void Update()
     {
         if (currentState == null) return;
+
+        // Sensör her karede, durum makinesinden ÖNCE taransın; durumlar
+        // karar verirken güncel ölçümü görsün.
+        ScanSensor();
 
         ISkeletonState next = currentState.Tick(context);
 
@@ -135,6 +162,19 @@ public class SkeletonCompanion : MonoBehaviour
         }
 
         UpdateWalkAnimation();
+    }
+
+    /// <summary>
+    /// Sensöre o anki hedefi verip çevreyi taratır. Hedef, ajanın gittiği
+    /// noktadır; hiç yol yoksa görüş hattı kontrolü atlanır.
+    /// </summary>
+    private void ScanSensor()
+    {
+        if (sensor == null) return;
+
+        bool hedefVar = agent != null && agent.isOnNavMesh && agent.hasPath;
+        Vector3 hedef = hedefVar ? agent.destination : transform.position;
+        sensor.Scan(hedef, hedefVar);
     }
 
     /// <summary>

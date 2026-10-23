@@ -9,6 +9,9 @@ public class CompletedState : ISkeletonState
     public void Enter(SkeletonContext context)
     {
         context.Stop();
+
+        // Açtığı kapıya dönük dursun; sırtı dönük beklemesin.
+        context.FaceDoor();
     }
 
     public ISkeletonState Tick(SkeletonContext context)
