@@ -32,6 +32,9 @@ public class SkeletonCompanion : MonoBehaviour
     [Tooltip("Boş bırakılırsa aynı objedeki SkeletonSensor kullanılır.")]
     [SerializeField] private SkeletonSensor sensor;
 
+    [Tooltip("Görev bitince iskeletin çekileceği nokta. Boşsa kapıdan uzaklaşma yönü hesaplanır.")]
+    [SerializeField] private Transform restPoint;
+
     [Header("Davranış Ayarları")]
     [Tooltip("Hedefe bu mesafeden yakınsa vardı sayılır.")]
     [SerializeField] private float acceptRadius = 1.5f;
@@ -124,6 +127,7 @@ public class SkeletonCompanion : MonoBehaviour
             keyObject,
             door,
             sensor,
+            restPoint,
             acceptRadius,
             pickUpDuration,
             retryDelay,

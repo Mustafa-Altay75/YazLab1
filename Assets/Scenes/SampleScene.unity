@@ -7413,6 +7413,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 974671988}
   m_CullTransparentMesh: 1
+--- !u!1 &1004463069
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1004463070}
+  m_Layer: 0
+  m_Name: SkeletonRestPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1004463070
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1004463069}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4, y: 0.0899043, z: 8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1012234604
 GameObject:
   m_ObjectHideFlags: 0
@@ -10733,6 +10764,7 @@ MonoBehaviour:
   keyObject: {fileID: 18674529}
   door: {fileID: 73262262}
   sensor: {fileID: 1585690087}
+  restPoint: {fileID: 1004463070}
   acceptRadius: 1.5
   pickUpDuration: 1
   retryDelay: 2
@@ -11450,6 +11482,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 445bc977c91c02f44b4867bd7c0f8c16, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1715080095}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 445bc977c91c02f44b4867bd7c0f8c16, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1715080098}
     - targetCorrespondingSourceObject: {fileID: -578178860134422895, guid: 445bc977c91c02f44b4867bd7c0f8c16, type: 3}
       insertIndex: -1
       addedObject: {fileID: 73262263}
@@ -11488,6 +11523,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4, y: 4, z: 1.0000006}
   m_Center: {x: 0, y: 2, z: -0.00000031292439}
+--- !u!64 &1715080098
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1715080094}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -2154953612500603615, guid: 445bc977c91c02f44b4867bd7c0f8c16, type: 3}
 --- !u!1001 &1724056001
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14410,3 +14467,4 @@ SceneRoots:
   - {fileID: 1238413469}
   - {fileID: 18674528}
   - {fileID: 516528503}
+  - {fileID: 1004463070}

@@ -22,6 +22,12 @@ public class SkeletonContext
     /// <summary>Çevreyi raycast ile gözleyen sensör.</summary>
     public SkeletonSensor Sensor { get; }
 
+    /// <summary>
+    /// Görev bitince iskeletin çekileceği nokta. Boşsa kapıdan uzaklaşma
+    /// yönü hesaplanır, ama sahnede bir nokta verilirse o kullanılır.
+    /// </summary>
+    public Transform RestPoint { get; }
+
     // --- Ayarlar ---
     /// <summary>Hedefe bu mesafeden yakınsa "vardı" sayılır.</summary>
     public float AcceptRadius { get; }
@@ -79,6 +85,7 @@ public class SkeletonContext
         GameObject keyObject,
         DoorInteractable door,
         SkeletonSensor sensor,
+        Transform restPoint,
         float acceptRadius,
         float pickUpDuration,
         float retryDelay,
@@ -93,6 +100,7 @@ public class SkeletonContext
         KeyObject = keyObject;
         Door = door;
         Sensor = sensor;
+        RestPoint = restPoint;
         AcceptRadius = acceptRadius;
         PickUpDuration = pickUpDuration;
         RetryDelay = retryDelay;

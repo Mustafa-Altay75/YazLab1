@@ -23,7 +23,19 @@ public class StepBackState : ISkeletonState
         enteredAt = Time.time;
         hasTarget = false;
 
-        if (context.Door == null || context.Agent == null) return;
+        if (context.Agent == null) return;
+
+        // Sahnede bir dinlenme noktası verilmişse oraya git. Hesaplanan yön
+        // kapının hemen dibinde bırakıyordu; belirlenmiş bir nokta hem
+        // görünür oluyor hem de Scene view'dan sürüklenerek ayarlanabiliyor.
+        if (context.RestPoint != null)
+        {
+            target = context.RestPoint.position;
+            hasTarget = context.SetDestination(target);
+            return;
+        }
+
+        if (context.Door == null) return;
 
         Vector3 kapi = context.Door.transform.position;
         Vector3 iskelet = context.Agent.transform.position;
