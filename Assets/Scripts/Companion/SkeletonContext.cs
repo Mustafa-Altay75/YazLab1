@@ -50,12 +50,34 @@ public class SkeletonContext
     /// <summary>Durum geçişleri konsola yazılsın mı.</summary>
     public bool LogTransitions { get; }
 
+    // --- İkinci görev: basınç plakası ---
+    /// <summary>İskeletin üstünde duracağı basınç plakası.</summary>
+    public Transform PlatePoint { get; private set; }
+
+    /// <summary>Takip modunda arkasında yürünecek oyuncu.</summary>
+    public Transform Player { get; private set; }
+
+    /// <summary>Takip ederken oyuncuya bu mesafeden yakınsa durur.</summary>
+    public float FollowDistance { get; private set; }
+
+    /// <summary>Takipte hedef bu aralıkla yenilenir; her karede değil.</summary>
+    public float FollowRepathInterval { get; private set; }
+
     // --- Çalışma anında değişen veri ---
     /// <summary>Anahtar alındı mı.</summary>
     public bool HasKey { get; set; }
 
     /// <summary>Oyuncu "anahtarı getir" emrini verdi mi.</summary>
     public bool OrderGiven { get; set; }
+
+    /// <summary>Anahtar görevi tamamlandı mı. Takip modu buna bağlı.</summary>
+    public bool KeyErrandDone { get; set; }
+
+    /// <summary>Oyuncu takip modunu açtı mı.</summary>
+    public bool FollowRequested { get; set; }
+
+    /// <summary>Oyuncu "plakaya git" emrini verdi mi.</summary>
+    public bool PlateOrderGiven { get; set; }
 
     /// <summary>Kaç kez takıldığı. Testlerde ve raporda kullanılıyor.</summary>
     public int StuckCount { get; private set; }
@@ -77,6 +99,9 @@ public class SkeletonContext
     public ISkeletonState StepBack { get; }
     public ISkeletonState Completed { get; }
     public ISkeletonState Blocked { get; }
+    public ISkeletonState Following { get; }
+    public ISkeletonState MoveToPlate { get; }
+    public ISkeletonState StandOnPlate { get; }
 
     public SkeletonContext(
         NavMeshAgent agent,
@@ -118,6 +143,23 @@ public class SkeletonContext
         StepBack = new StepBackState();
         Completed = new CompletedState();
         Blocked = new BlockedState();
+        Following = new FollowingState();
+        MoveToPlate = new MoveToPlateState();
+        StandOnPlate = new StandOnPlateState();
+    }
+
+    /// <summary>
+    /// İkinci görevin referanslarını bağlar. Ayrı bir metot, çünkü bunlar
+    /// hücre kapısı açılana kadar kullanılmıyor ve kurucuyu daha da
+    /// uzatmanın okunurluğa faydası yok.
+    /// </summary>
+    public void AttachPlateTask(Transform plate, Transform player,
+                                float followDistance, float followRepathInterval)
+    {
+        PlatePoint = plate;
+        Player = player;
+        FollowDistance = followDistance;
+        FollowRepathInterval = followRepathInterval;
     }
 
     /// <summary>

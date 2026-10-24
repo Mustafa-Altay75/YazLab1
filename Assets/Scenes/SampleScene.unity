@@ -3231,6 +3231,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0367b0ca29d3d7545ba2794d8cab9933, type: 3}
       insertIndex: -1
       addedObject: {fileID: 248082539}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0367b0ca29d3d7545ba2794d8cab9933, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 248082540}
   m_SourcePrefab: {fileID: 100100000, guid: 0367b0ca29d3d7545ba2794d8cab9933, type: 3}
 --- !u!4 &248082537 stripped
 Transform:
@@ -3263,6 +3266,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4, y: 2, z: 4}
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &248082540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 248082538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de67ba16f0ac889408f33ea435a89a5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PressurePlate
+  gate: {fileID: 8959664138293662503}
+  companion: {fileID: 0}
+  pressRadius: 1.1
+  dwellSeconds: 0.8
+  checkInterval: 0.1
+  logChanges: 1
 --- !u!1001 &251423774
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14877,7 +14898,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkeletonOrderInteractable
   companion: {fileID: 1585690086}
   interactable: {fileID: 1585690082}
-  promptText: "[E] Anahtar\u0131 getir"
+  keyErrandPrompt: "[E] Anahtar\u0131 getir"
+  followPrompt: '[F] Beni takip et'
+  waitPrompt: '[F] Burada bekle'
+  plateFollowingPrompt: '[E] Plakaya git     [F] Burada bekle'
+  plateIdlePrompt: '[E] Plakaya git     [F] Beni takip et'
 --- !u!65 &1187498557
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -18420,6 +18445,11 @@ MonoBehaviour:
   door: {fileID: 73262262}
   sensor: {fileID: 1585690087}
   restPoint: {fileID: 1004463070}
+  platePoint: {fileID: 248082537}
+  player: {fileID: 1802516491}
+  followDistance: 2.5
+  followRepathInterval: 0.25
+  followKey: 20
   acceptRadius: 1.5
   pickUpDuration: 1
   retryDelay: 2
@@ -25195,6 +25225,7 @@ GameObject:
   - component: {fileID: 5096578505797995599}
   - component: {fileID: 2305749067232224672}
   - component: {fileID: 5995728700117087446}
+  - component: {fileID: 5995728700117087447}
   m_Layer: 0
   m_Name: PlateGate_Leaf_Dogu
   m_TagString: Untagged
@@ -25230,6 +25261,7 @@ GameObject:
   - component: {fileID: 3128925917727526572}
   - component: {fileID: 8226150320271664963}
   - component: {fileID: 8226150320271664964}
+  - component: {fileID: 8226150320271664965}
   m_Layer: 0
   m_Name: PlateGate_Leaf_Bati
   m_TagString: Untagged
@@ -25290,6 +25322,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2, y: 2.75, z: 0.7735462}
   m_Center: {x: -0.8200989, y: 1.375, z: -0.00000035762787}
+--- !u!208 &5995728700117087447
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3225696725340031137}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 1, y: 1.375, z: 0.3867731}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 0
+  m_Center: {x: -0.8200989, y: 1.375, z: -0.00000035762787}
+  m_TimeToStationary: 0.5
 --- !u!23 &7790158409156995146
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -25409,6 +25457,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2, y: 2.75, z: 0.7735462}
   m_Center: {x: -0.8200989, y: 1.375, z: -0.00000035762787}
+--- !u!208 &8226150320271664965
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4689787329288211010}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 1, y: 1.375, z: 0.3867731}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 0
+  m_Center: {x: -0.8200989, y: 1.375, z: -0.00000035762787}
+  m_TimeToStationary: 0.5
 --- !u!1 &8582963399032080799
 GameObject:
   m_ObjectHideFlags: 0
@@ -25482,8 +25546,12 @@ MonoBehaviour:
   leafEast: {fileID: 5995728700117087445}
   openAngle: 105
   openSpeed: 2.5
-  allowPlayerInteraction: 1
-  promptText: "[E] Kap\u0131y\u0131 a\xE7"
+  companion: {fileID: 1585690086}
+  sendPrompt: "Kap\u0131 plakayla a\xE7\u0131l\u0131yor \u2014 [E] iskeleti plakaya g\xF6nder"
+  closeGraceSeconds: 30
+  insideClearance: 1.5
+  allowPlayerInteraction: 0
+  debugOpenPrompt: "[E] Kap\u0131y\u0131 a\xE7 (hata ay\u0131klama)"
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

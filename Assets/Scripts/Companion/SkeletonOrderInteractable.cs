@@ -7,6 +7,15 @@ using UnityEngine;
 /// sandık ve kapı gibi sıradan bir etkileşim nesnesi oluyor ve
 /// PlayerInteraction'a hiç dokunmadan onun sistemine bağlanıyor.
 ///
+/// Yazı artık sabit değil, iskeletin o anki görevine göre değişiyor:
+/// hücre kapısından önce anahtar, sonra plaka. İkinci görevde takip modu
+/// da devreye girdiği için F tuşu da burada duyuruluyor.
+///
+/// "Plakaya git" seçeneği oyuncu kapıyı bir kez görene kadar hiç
+/// gösterilmiyor. Yoksa oyuncu daha kapıdan haberi yokken iskeleti
+/// yanlışlıkla yollayabilir ve bulmacanın ne işe yaradığını anlamadan
+/// geçer. Kapı görüldükten sonra emir her yerden verilebiliyor.
+///
 /// ÖNEMLİ: Bu bileşen Skeleton_Minion'un KENDİSİNDE değil, kendi collider'ı
 /// olan bir alt objede durmalı. Çünkü PlayerInteraction bir collider için
 /// GetComponentInParent ile TEK bir IInteractable çözüyor; aynı objede
@@ -20,7 +29,12 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
     [Tooltip("Boş bırakılırsa üst objelerde aranır.")]
     [SerializeField] private SkeletonInteractable interactable;
 
-    [SerializeField] private string promptText = "[E] Anahtarı getir";
+    [Header("Yazılar")]
+    [SerializeField] private string keyErrandPrompt = "[E] Anahtarı getir";
+    [SerializeField] private string followPrompt = "[F] Beni takip et";
+    [SerializeField] private string waitPrompt = "[F] Burada bekle";
+    [SerializeField] private string plateFollowingPrompt = "[E] Plakaya git     [F] Burada bekle";
+    [SerializeField] private string plateIdlePrompt = "[E] Plakaya git     [F] Beni takip et";
 
     private void Awake()
     {
@@ -32,18 +46,43 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
     {
         // Diriltilmeden emir verilemez; o aşamada söz SkeletonInteractable'da.
         if (interactable == null || !interactable.IsResurrected) return string.Empty;
+        if (companion == null) return string.Empty;
 
-        // Emir verildiyse artık gösterecek bir şey yok.
-        if (companion == null || companion.OrderGiven) return string.Empty;
+        // Birinci görev: anahtar.
+        if (!companion.KeyErrandDone)
+        {
+            return companion.OrderGiven ? string.Empty : keyErrandPrompt;
+        }
 
-        return promptText;
+        // İkinci görev: plaka. Plaka sahnede bağlı değilse gösterilecek bir şey yok.
+        if (!companion.HasPlateTask) return string.Empty;
+        if (companion.PlateOrderGiven) return string.Empty;
+
+        // Kapı henüz görülmediyse plaka diye bir şey bilmiyoruz; sadece
+        // iskeleti yanımızda tutmayı teklif et.
+        if (!companion.GateSeen)
+        {
+            return companion.IsFollowing ? waitPrompt : followPrompt;
+        }
+
+        return companion.IsFollowing ? plateFollowingPrompt : plateIdlePrompt;
     }
 
     public void Interact(GameObject interactor)
     {
         if (interactable == null || !interactable.IsResurrected) return;
-        if (companion == null || companion.OrderGiven) return;
+        if (companion == null) return;
 
-        companion.GiveOrder();
+        if (!companion.KeyErrandDone)
+        {
+            if (!companion.OrderGiven) companion.GiveOrder();
+            return;
+        }
+
+        // Anahtar görevi bittiyse E artık plakaya gönderiyor. Takip
+        // modunda olması şart değil; oyuncu iskeletin yanındaysa oradan da
+        // gönderebilsin. Kapı görülmediyse OrderToPlate zaten hiçbir şey
+        // yapmıyor, yazıda da E görünmüyor.
+        companion.OrderToPlate();
     }
 }

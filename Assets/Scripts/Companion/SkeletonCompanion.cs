@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// İskeletin otonom davranışını süren bileşen.
@@ -34,6 +35,22 @@ public class SkeletonCompanion : MonoBehaviour
 
     [Tooltip("Görev bitince iskeletin çekileceği nokta. Boşsa kapıdan uzaklaşma yönü hesaplanır.")]
     [SerializeField] private Transform restPoint;
+
+    [Header("İkinci Görev: Basınç Plakası")]
+    [Tooltip("İskeletin üstünde duracağı plaka.")]
+    [SerializeField] private Transform platePoint;
+
+    [Tooltip("Takip edilecek oyuncu. Boş bırakılırsa sahnedeki PlayerController aranır.")]
+    [SerializeField] private Transform player;
+
+    [Tooltip("Takip ederken oyuncuya bu mesafeden yakınsa durur.")]
+    [SerializeField] private float followDistance = 2.5f;
+
+    [Tooltip("Takipte hedef bu aralıkla yenilenir (saniye). Her karede yenilemek yol hesabını boşuna tekrarlatır.")]
+    [SerializeField] private float followRepathInterval = 0.25f;
+
+    [Tooltip("Takip modunu açıp kapatan tuş.")]
+    [SerializeField] private Key followKey = Key.F;
 
     [Header("Davranış Ayarları")]
     [Tooltip("Hedefe bu mesafeden yakınsa vardı sayılır.")]
@@ -80,6 +97,40 @@ public class SkeletonCompanion : MonoBehaviour
     /// <summary>Oyuncu "anahtarı getir" emrini verdi mi.</summary>
     public bool OrderGiven => context != null && context.OrderGiven;
 
+    /// <summary>Anahtar görevi bitti mi. Takip modu ve plaka emri buna bağlı.</summary>
+    public bool KeyErrandDone => context != null && context.KeyErrandDone;
+
+    /// <summary>Şu an oyuncuyu takip ediyor mu.</summary>
+    public bool IsFollowing => context != null && context.FollowRequested;
+
+    /// <summary>Plakaya gitme emri verildi mi.</summary>
+    public bool PlateOrderGiven => context != null && context.PlateOrderGiven;
+
+    /// <summary>Plaka hedefi sahnede bağlı mı.</summary>
+    public bool HasPlateTask => platePoint != null;
+
+    /// <summary>
+    /// Oyuncu kapıyı bir kez görüp kendi açamayacağını anladı mı.
+    ///
+    /// "Plakaya git" emri buna bağlı: oyuncu daha kapıyı görmeden iskeleti
+    /// plakaya yollayabilseydi, hem emri yanlışlıkla verebilirdi hem de
+    /// bulmacanın ne işe yaradığını hiç anlamadan geçmiş olurdu.
+    /// </summary>
+    public bool GateSeen { get; private set; }
+
+    /// <summary>Kapının yanına varıldığında PlateGate çağırır.</summary>
+    public void MarkGateSeen()
+    {
+        if (GateSeen) return;
+
+        GateSeen = true;
+
+        if (logTransitions)
+        {
+            Debug.Log("Oyuncu kapıyı gördü; artık iskelet her yerden plakaya gönderilebilir.", this);
+        }
+    }
+
     /// <summary>Kaç kez takıldığı. Testlerde ve raporda kullanılıyor.</summary>
     public int StuckCount => context != null ? context.StuckCount : 0;
 
@@ -99,6 +150,46 @@ public class SkeletonCompanion : MonoBehaviour
         if (logTransitions)
         {
             Debug.Log("İskelete emir verildi: anahtarı getir.", this);
+        }
+    }
+
+    /// <summary>
+    /// Takip modunu açar/kapatır. Anahtar görevi bitmeden çalışmaz;
+    /// o aşamada iskeletin zaten bir işi var.
+    /// </summary>
+    public void ToggleFollow()
+    {
+        if (context == null || !context.KeyErrandDone) return;
+
+        context.FollowRequested = !context.FollowRequested;
+
+        if (logTransitions)
+        {
+            Debug.Log(context.FollowRequested
+                ? "İskelet takip moduna alındı."
+                : "İskelete burada bekle denildi.", this);
+        }
+    }
+
+    /// <summary>
+    /// "Plakaya git" emrini iletir. Hem iskeletin yanından hem de kapının
+    /// önünden çağrılabiliyor; ikisi de aynı duruma gidiyor.
+    ///
+    /// İskeletin takip ediyor olması şart değil: emir nereden verilirse
+    /// verilsin, iskelet o an bulunduğu yerden yola çıkar. Zaten ajanın
+    /// kendi yolunu bulduğunu gösteren şey de bu.
+    /// </summary>
+    public void OrderToPlate()
+    {
+        if (context == null || !context.KeyErrandDone || !GateSeen) return;
+        if (platePoint == null || context.PlateOrderGiven) return;
+
+        context.PlateOrderGiven = true;
+        context.FollowRequested = false;
+
+        if (logTransitions)
+        {
+            Debug.Log("İskelete emir verildi: plakaya git.", this);
         }
     }
 
@@ -136,6 +227,14 @@ public class SkeletonCompanion : MonoBehaviour
             stepBackTimeout,
             logTransitions);
 
+        if (player == null)
+        {
+            PlayerController pc = FindAnyObjectByType<PlayerController>();
+            if (pc != null) player = pc.transform;
+        }
+
+        context.AttachPlateTask(platePoint, player, followDistance, followRepathInterval);
+
         currentState = context.Inactive;
         currentStateName = currentState.Name;
         currentState.Enter(context);
@@ -148,6 +247,8 @@ public class SkeletonCompanion : MonoBehaviour
         // Sensör her karede, durum makinesinden ÖNCE taransın; durumlar
         // karar verirken güncel ölçümü görsün.
         ScanSensor();
+
+        ReadFollowKey();
 
         ISkeletonState next = currentState.Tick(context);
 
@@ -166,6 +267,25 @@ public class SkeletonCompanion : MonoBehaviour
         }
 
         UpdateWalkAnimation();
+    }
+
+    /// <summary>
+    /// Takip tuşunu okur.
+    ///
+    /// Girdi normalde oyuncunun işi, ama bu tek tuş için Mustafa'nın
+    /// PlayerController veya PlayerInteraction scriptine dokunmak
+    /// gerekmesin diye burada okunuyor. Etkileşim tuşu (E) onun
+    /// sisteminde kalmaya devam ediyor.
+    /// </summary>
+    private void ReadFollowKey()
+    {
+        if (Keyboard.current == null) return;
+        if (context == null || !context.KeyErrandDone) return;
+
+        if (Keyboard.current[followKey].wasPressedThisFrame)
+        {
+            ToggleFollow();
+        }
     }
 
     /// <summary>
