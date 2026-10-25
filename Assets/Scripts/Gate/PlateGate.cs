@@ -128,12 +128,28 @@ public class PlateGate : MonoBehaviour, IInteractable
     }
 
     /// <summary>
+    /// Kapıyı açar ve kapanmasını tamamen devre dışı bırakır.
+    ///
+    /// Paladin rüşvet istediğinde gerekiyor: iskelet altınları toplamaya
+    /// gidecek, yani plakadan inecek. Kapı plakaya bağlı kalsaydı oyuncu
+    /// Paladin'in odasında kilitli kalır, iskelet de geri giremezdi.
+    /// </summary>
+    public void HoldOpen()
+    {
+        kilitliAcik = true;
+        OpenGate();
+    }
+
+    private bool kilitliAcik;
+
+    /// <summary>
     /// Plakadan inilince çağrılır. Kapıyı hemen kapatmaz: plakadan inen
     /// iskelet kapıya doğru yürüyor ve anında kapatmak onu dışarıda
     /// bırakırdı. İskelet içeri geçince ya da süre dolunca kapanır.
     /// </summary>
     public void CloseGate()
     {
+        if (kilitliAcik) return;
         if (!acik || kapanmayiBekliyor) return;
 
         kapanmayiBekliyor = true;

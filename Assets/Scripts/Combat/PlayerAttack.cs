@@ -49,6 +49,9 @@ public class PlayerAttack : MonoBehaviour
 
     private void Update()
     {
+        // Diyalog kutusuna yazarken boşluk tuşu saldırı başlatmasın.
+        if (InputLock.Captured) return;
+
         if (!GirdiVar()) return;
         if (Time.time < sonrakiVurus) return;
         if (requireArmed && inventory != null && !inventory.IsArmed) return;

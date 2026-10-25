@@ -22,6 +22,7 @@ public class CompletedState : ISkeletonState
 
     public ISkeletonState Tick(SkeletonContext context)
     {
+        if (context.CoinOrderGiven) return context.MoveToCoins;
         if (context.SwordOrderGiven) return context.MoveToSword;
         if (context.PlateOrderGiven) return context.MoveToPlate;
         if (context.FollowRequested) return context.Following;
