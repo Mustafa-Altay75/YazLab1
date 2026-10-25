@@ -33,8 +33,8 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
     [SerializeField] private string keyErrandPrompt = "[E] Anahtarı getir";
     [SerializeField] private string followPrompt = "[F] Beni takip et";
     [SerializeField] private string waitPrompt = "[F] Burada bekle";
-    [SerializeField] private string plateFollowingPrompt = "[E] Plakaya git     [F] Burada bekle";
-    [SerializeField] private string plateIdlePrompt = "[E] Plakaya git     [F] Beni takip et";
+    [SerializeField] private string plateFollowingPrompt = "[E] Plakaya git\n[F] Burada bekle";
+    [SerializeField] private string plateIdlePrompt = "[E] Plakaya git\n[F] Beni takip et";
 
     private void Awake()
     {
@@ -53,6 +53,10 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
         {
             return companion.OrderGiven ? string.Empty : keyErrandPrompt;
         }
+
+        // Kılıç görevi sürerken iskelete başka emir verilmez; yolda
+        // çevirmek onu yarı yolda bırakırdı.
+        if (companion.SwordOrderGiven) return string.Empty;
 
         // İkinci görev: plaka. Plaka sahnede bağlı değilse gösterilecek bir şey yok.
         if (!companion.HasPlateTask) return string.Empty;
@@ -78,6 +82,8 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
             if (!companion.OrderGiven) companion.GiveOrder();
             return;
         }
+
+        if (companion.SwordOrderGiven) return;
 
         // Anahtar görevi bittiyse E artık plakaya gönderiyor. Takip
         // modunda olması şart değil; oyuncu iskeletin yanındaysa oradan da

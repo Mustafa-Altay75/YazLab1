@@ -33,7 +33,7 @@ public class PlateGate : MonoBehaviour, IInteractable
     [SerializeField] private SkeletonCompanion companion;
 
     [Tooltip("Kapının yanındaki yazı: mekanizmayı anlatır ve emri verir.")]
-    [SerializeField] private string sendPrompt = "Kapı plakayla açılıyor — [E] iskeleti plakaya gönder";
+    [SerializeField] private string sendPrompt = "Kapı plakayla açılıyor\n[E] İskeleti plakaya gönder";
 
     [Header("Kapanma")]
     [Tooltip("Plakadan inildikten sonra kapı, iskelet içeri geçene kadar açık kalır. Bu süre üst sınır.")]

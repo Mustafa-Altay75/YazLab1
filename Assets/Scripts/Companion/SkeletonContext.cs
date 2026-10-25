@@ -63,6 +63,25 @@ public class SkeletonContext
     /// <summary>Takipte hedef bu aralıkla yenilenir; her karede değil.</summary>
     public float FollowRepathInterval { get; private set; }
 
+    // --- Üçüncü görev: kılıç ve muhafızlar ---
+    /// <summary>Masanın üstündeki kılıç. Alınınca gizleniyor.</summary>
+    public GameObject SwordObject { get; private set; }
+
+    /// <summary>İskeletin elindeki kılıç. Başta kapalı, alınınca açılıyor.</summary>
+    public GameObject SwordInHand { get; private set; }
+
+    /// <summary>Muhafızları ve çarpışmayı yöneten bileşen.</summary>
+    public GuardEncounter Encounter { get; private set; }
+
+    /// <summary>Muhafıza bu mesafeden yakınsa vurabilir.</summary>
+    public float AttackRange { get; private set; }
+
+    /// <summary>İskeletin bir vuruşunun hasarı.</summary>
+    public int AttackDamage { get; private set; }
+
+    /// <summary>İki vuruş arası süre (saniye).</summary>
+    public float AttackCooldown { get; private set; }
+
     // --- Çalışma anında değişen veri ---
     /// <summary>Anahtar alındı mı.</summary>
     public bool HasKey { get; set; }
@@ -78,6 +97,12 @@ public class SkeletonContext
 
     /// <summary>Oyuncu "plakaya git" emrini verdi mi.</summary>
     public bool PlateOrderGiven { get; set; }
+
+    /// <summary>Oyuncu "kılıcı al" emrini verdi mi.</summary>
+    public bool SwordOrderGiven { get; set; }
+
+    /// <summary>Kılıç alındı mı.</summary>
+    public bool Armed { get; set; }
 
     /// <summary>Kaç kez takıldığı. Testlerde ve raporda kullanılıyor.</summary>
     public int StuckCount { get; private set; }
@@ -102,6 +127,10 @@ public class SkeletonContext
     public ISkeletonState Following { get; }
     public ISkeletonState MoveToPlate { get; }
     public ISkeletonState StandOnPlate { get; }
+    public ISkeletonState MoveToSword { get; }
+    public ISkeletonState PickUpSword { get; }
+    public ISkeletonState MoveToThreat { get; }
+    public ISkeletonState AttackThreat { get; }
 
     public SkeletonContext(
         NavMeshAgent agent,
@@ -146,6 +175,10 @@ public class SkeletonContext
         Following = new FollowingState();
         MoveToPlate = new MoveToPlateState();
         StandOnPlate = new StandOnPlateState();
+        MoveToSword = new MoveToSwordState();
+        PickUpSword = new PickUpSwordState();
+        MoveToThreat = new MoveToThreatState();
+        AttackThreat = new AttackThreatState();
     }
 
     /// <summary>
@@ -160,6 +193,81 @@ public class SkeletonContext
         Player = player;
         FollowDistance = followDistance;
         FollowRepathInterval = followRepathInterval;
+    }
+
+    /// <summary>
+    /// Kılıç görevinin referanslarını bağlar. AttachPlateTask ile aynı
+    /// gerekçe: bu referanslar oyunun geç bir aşamasına ait ve kurucuyu
+    /// daha da uzatmanın okunurluğa faydası yok.
+    /// </summary>
+    public void AttachSwordTask(GameObject sword, GameObject swordInHand, GuardEncounter encounter,
+                                float attackRange, int attackDamage, float attackCooldown)
+    {
+        SwordObject = sword;
+        SwordInHand = swordInHand;
+        Encounter = encounter;
+        AttackRange = attackRange;
+        AttackDamage = attackDamage;
+        AttackCooldown = attackCooldown;
+    }
+
+    /// <summary>
+    /// O an ayakta olan en yakın muhafız. Kimin ayakta olduğunu bilen yer
+    /// GuardEncounter; durumlar o listeyi kendileri tutmuyor.
+    /// </summary>
+    public Health NearestThreat()
+    {
+        if (Encounter == null || Agent == null) return null;
+        return Encounter.NearestLivingGuard(Agent.transform.position);
+    }
+
+    /// <summary>Hedef vuruş menzilinde mi (yatay mesafe).</summary>
+    public bool WithinAttackRange(Health hedef)
+    {
+        if (hedef == null || Agent == null) return false;
+
+        Vector3 a = Agent.transform.position;
+        Vector3 b = hedef.transform.position;
+        a.y = 0f;
+        b.y = 0f;
+        return Vector3.Distance(a, b) <= AttackRange;
+    }
+
+    /// <summary>
+    /// Çarpışma bitti: iskelet oyuncunun yanına döner. Takip bayrağı
+    /// burada açılıyor, çünkü iskeleti muhafızların yanında bırakmak
+    /// oyuncuyu geri yürüyüp onu çağırmaya zorlardı.
+    /// </summary>
+    public ISkeletonState FightOver()
+    {
+        SwordOrderGiven = false;
+        FollowRequested = true;
+        return Following;
+    }
+
+    /// <summary>Hedefe döner. Ajanın dönüş kontrolü varken de çalışsın diye doğrudan yazılıyor.</summary>
+    public void FaceTarget(Vector3 hedef)
+    {
+        if (Agent == null) return;
+
+        Vector3 yon = hedef - Agent.transform.position;
+        yon.y = 0f;
+        if (yon.sqrMagnitude < 0.0001f) return;
+
+        Agent.transform.rotation = Quaternion.LookRotation(yon.normalized);
+    }
+
+    /// <summary>Vuruş animasyonunu tetikler. Parametre yoksa sessizce geçer.</summary>
+    public void TriggerAttackAnimation()
+    {
+        if (Animator == null || Animator.runtimeAnimatorController == null) return;
+
+        foreach (var p in Animator.parameters)
+        {
+            if (p.name != "Attack") continue;
+            Animator.SetTrigger("Attack");
+            return;
+        }
     }
 
     /// <summary>

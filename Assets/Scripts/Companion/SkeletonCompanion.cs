@@ -52,6 +52,25 @@ public class SkeletonCompanion : MonoBehaviour
     [Tooltip("Takip modunu açıp kapatan tuş.")]
     [SerializeField] private Key followKey = Key.F;
 
+    [Header("Üçüncü Görev: Kılıç ve Muhafızlar")]
+    [Tooltip("Masanın üstündeki kılıç. Alınınca gizlenir.")]
+    [SerializeField] private GameObject swordObject;
+
+    [Tooltip("İskeletin elindeki kılıç (handslot.r altında). Başta kapalı olmalı.")]
+    [SerializeField] private GameObject swordInHand;
+
+    [Tooltip("Muhafızlar. Boş bırakılırsa sahnedeki GuardEncounter aranır.")]
+    [SerializeField] private GuardEncounter guardEncounter;
+
+    [Tooltip("Muhafıza bu mesafeden yakınsa vurur. Muhafızlar NavMesh'i oyduğu için kabul yarıçapından büyük olmalı.")]
+    [SerializeField] private float attackRange = 2.6f;
+
+    [Tooltip("İskeletin bir vuruşunun hasarı.")]
+    [SerializeField] private int attackDamage = 10;
+
+    [Tooltip("İki vuruş arası süre (saniye).")]
+    [SerializeField] private float attackCooldown = 0.9f;
+
     [Header("Davranış Ayarları")]
     [Tooltip("Hedefe bu mesafeden yakınsa vardı sayılır.")]
     [SerializeField] private float acceptRadius = 1.5f;
@@ -109,6 +128,36 @@ public class SkeletonCompanion : MonoBehaviour
     /// <summary>Plaka hedefi sahnede bağlı mı.</summary>
     public bool HasPlateTask => platePoint != null;
 
+    /// <summary>Kılıç görevi sahnede bağlı mı.</summary>
+    public bool HasSwordTask => swordObject != null && guardEncounter != null;
+
+    /// <summary>Kılıç emri verildi mi.</summary>
+    public bool SwordOrderGiven => context != null && context.SwordOrderGiven;
+
+    /// <summary>İskelet kılıcı aldı mı.</summary>
+    public bool IsArmed => context != null && context.Armed;
+
+    /// <summary>
+    /// "Kılıcı al" emrini iletir. Muhafızların önünden E ile çağrılıyor.
+    ///
+    /// İskelet emri nerede alırsa alsın masaya kendi yolunu bularak
+    /// gidiyor; bu projenin en uzun yolculuğu ve ajanın gerçekten plan
+    /// yaptığını gösteren en net örnek.
+    /// </summary>
+    public void OrderToSword()
+    {
+        if (context == null || !context.KeyErrandDone) return;
+        if (!HasSwordTask || context.SwordOrderGiven || context.Armed) return;
+
+        context.SwordOrderGiven = true;
+        context.FollowRequested = false;
+
+        if (logTransitions)
+        {
+            Debug.Log("İskelete emir verildi: kılıcı al.", this);
+        }
+    }
+
     /// <summary>
     /// Oyuncu kapıyı bir kez görüp kendi açamayacağını anladı mı.
     ///
@@ -160,6 +209,10 @@ public class SkeletonCompanion : MonoBehaviour
     public void ToggleFollow()
     {
         if (context == null || !context.KeyErrandDone) return;
+
+        // Kılıç görevi sürerken takip emri verilemez; yoldan çevirmek
+        // iskeleti yarı yolda bırakırdı.
+        if (context.SwordOrderGiven) return;
 
         context.FollowRequested = !context.FollowRequested;
 
@@ -235,9 +288,30 @@ public class SkeletonCompanion : MonoBehaviour
 
         context.AttachPlateTask(platePoint, player, followDistance, followRepathInterval);
 
+        if (guardEncounter == null) guardEncounter = FindAnyObjectByType<GuardEncounter>();
+        context.AttachSwordTask(swordObject, swordInHand, guardEncounter,
+                                attackRange, attackDamage, attackCooldown);
+
+        // Kılıç başta elinde olmamalı; sahnede açık unutulsa bile burada kapanır.
+        if (swordInHand != null) swordInHand.SetActive(false);
+
+        // Emri muhafızlar duyuruyor, görevi iskelet yürütüyor. GuardEncounter
+        // kılıç diye bir şey bilmiyor; sadece oyuncunun istediğini söylüyor.
+        if (guardEncounter != null) guardEncounter.SwordErrandRequested += MuhafizlarKilicIstedi;
+
         currentState = context.Inactive;
         currentStateName = currentState.Name;
         currentState.Enter(context);
+    }
+
+    private void OnDestroy()
+    {
+        if (guardEncounter != null) guardEncounter.SwordErrandRequested -= MuhafizlarKilicIstedi;
+    }
+
+    private void MuhafizlarKilicIstedi(GuardEncounter kaynak, GameObject isteyen)
+    {
+        OrderToSword();
     }
 
     private void Update()
