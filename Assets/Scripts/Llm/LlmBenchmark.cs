@@ -28,7 +28,6 @@ public class LlmBenchmark : MonoBehaviour
         "ikna|hucre_anahtari|Elimde hucre anahtari var, muhafizlar kendileri verdi.",
         "tehdit||Acmazsan iskeletlerimi uzerine salarim.",
         "diger||Hava bugun guzelmis.",
-        "ikna|altin|Sana altin verebilirim, birak gecelim.",
         "ikna||Az once yalan soyledim, kusura bakma. Dogrusu elimde sadece asa var."
     };
 

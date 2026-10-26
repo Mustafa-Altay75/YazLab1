@@ -5,21 +5,19 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Üç sonun ekranı ve çıkış sineması.
+/// Son ekranı ve çıkış sineması.
 ///
-/// Akış sona göre ayrışıyor:
+/// <b>Hangi sonların var olduğunu bilmiyor.</b> Başlık, metin ve davranış
+/// <see cref="NegotiationEnding"/>'in kendisinden geliyor; burada sona
+/// özel tek satır yok. Yeni bir son eklendiğinde bu dosya değişmiyor.
 ///
-/// <b>Geçiş ve Bedel</b> — kapı açılır, oyuncu kendi ayağıyla çıkar.
-/// Eşikten geçtiğinde kontrol kesilir, ekran yavaşça beyazlar, birkaç
-/// saniye sonra son ekranı gelir. Özgürlük anını oyuncunun yaşaması için:
-/// ekranın kapı açılır açılmaz basması o anı elinden alıyordu.
+/// Kapıdan çıkılarak varılan sonlarda ekran hemen gelmiyor: kapı açılır,
+/// oyuncu kendi ayağıyla çıkar, eşikte kontrol kesilir, ekran beyazlar ve
+/// birkaç saniye sonra son görünür. Özgürlük anını oyuncunun yaşaması
+/// için; ekranın kapı açılır açılmaz basması o anı elinden alıyordu.
 ///
-/// <b>Hüküm</b> — çıkılacak bir kapı yok. Paladin saldırır, ekran kısa bir
-/// gecikmeyle gelir ve tek seçenek yeniden başlamaktır.
-///
-/// Buradaki metinler modelin repliği değil, oyunun menü yazıları —
-/// "Oyun Bitti" ile aynı türden. Paladin'in ağzından çıkan her cümle
-/// modelden geliyor.
+/// Buradaki metinler modelin repliği değil, oyunun menü yazıları.
+/// Paladin'in ağzından çıkan her cümle modelden geliyor.
 /// </summary>
 public class EndingScreen : MonoBehaviour
 {
@@ -32,40 +30,30 @@ public class EndingScreen : MonoBehaviour
     [Tooltip("Ekranı beyazlatan tam ekran görsel. Alfası koddan sürülüyor.")]
     [SerializeField] private UnityEngine.UI.Image whiteOverlay;
 
-    [Tooltip("Yeniden oyna düğmesi.")]
     [SerializeField] private UnityEngine.UI.Button restartButton;
 
     [Header("Bağlantılar")]
     [SerializeField] private PaladinNegotiation negotiation;
 
-    [Tooltip("Geçiş ve bedel sonlarında açılacak çıkış kapısı.")]
-    [SerializeField] private ExitDoor exitDoor;
-
-    [Tooltip("Bedel sonunda oyuncunun bırakacağı asa ve kitap.")]
-    [SerializeField] private GameObject[] surrenderedGear;
-
     [Tooltip("Sinema başlayınca kapatılacak oyuncu bileşenleri.")]
     [SerializeField] private MonoBehaviour[] disableOnCinematic;
 
     [Header("Zamanlama")]
-    [Tooltip("Ekranın beyazlaması kaç saniye sürsün.")]
     [SerializeField] private float fadeSeconds = 1.6f;
-
-    [Tooltip("Beyaz dolduktan sonra son ekranı gelene kadar beklenen süre.")]
     [SerializeField] private float holdSeconds = 1.4f;
 
-    [Tooltip("Hüküm sonunda ekranın gelmesi için beklenen süre; son replik okunsun diye.")]
-    [SerializeField] private float judgementDelay = 2.0f;
+    [Tooltip("Kapıdan çıkılmayan sonlarda ekranın gelmesi için beklenen süre; son replik okunsun diye.")]
+    [SerializeField] private float immediateDelay = 2.0f;
 
     [SerializeField] private Key restartKey = Key.R;
 
-    private NegotiationOutcome son = NegotiationOutcome.None;
+    private NegotiationEnding son;
     private bool gorunur;
 
     private void Awake()
     {
         if (negotiation == null) negotiation = FindAnyObjectByType<PaladinNegotiation>();
-        if (negotiation != null) negotiation.OutcomeReached += SonaUlasildi;
+        if (negotiation != null) negotiation.EndingReached += SonaUlasildi;
 
         if (panelRoot != null) panelRoot.SetActive(false);
         if (whiteOverlay != null)
@@ -78,7 +66,7 @@ public class EndingScreen : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (negotiation != null) negotiation.OutcomeReached -= SonaUlasildi;
+        if (negotiation != null) negotiation.EndingReached -= SonaUlasildi;
         if (restartButton != null) restartButton.onClick.RemoveListener(YenidenBasla);
     }
 
@@ -89,34 +77,24 @@ public class EndingScreen : MonoBehaviour
     }
 
     /// <summary>
-    /// Sona varıldı. Kapı açılan sonlarda ekran burada GELMİYOR; yalnızca
-    /// dünya hazırlanıyor ve oyuncu çıkışa yönlendiriliyor.
+    /// Sona varıldı. Kapıdan çıkılarak varılan sonlarda ekran burada
+    /// GELMİYOR; dünya hazırlanıyor ve oyuncu çıkışa yöneliyor.
     /// </summary>
-    private void SonaUlasildi(NegotiationOutcome gelen)
+    private void SonaUlasildi(NegotiationEnding gelen)
     {
         son = gelen;
-
-        switch (son)
-        {
-            case NegotiationOutcome.Passage:
-                if (exitDoor != null) exitDoor.Open();
-                break;
-
-            case NegotiationOutcome.Price:
-                if (exitDoor != null) exitDoor.Open();
-                foreach (var g in surrenderedGear) if (g != null) g.SetActive(false);
-                break;
-
-            case NegotiationOutcome.Judgement:
-                StartCoroutine(HukumuGoster());
-                break;
-        }
+        if (!son.WaitForExit) StartCoroutine(GecikmeliGoster());
     }
 
+    /// <summary>Çıkış sineması başladığında bir kez tetiklenir.</summary>
+    public event System.Action ExitSequenceStarted;
+
     /// <summary>Oyuncu çıkış eşiğinden geçti. ExitTrigger çağırıyor.</summary>
-    public void PlayExitSequence(NegotiationOutcome gelen)
+    public void PlayExitSequence()
     {
-        son = gelen;
+        if (son == null) return;
+
+        if (ExitSequenceStarted != null) ExitSequenceStarted();
         StartCoroutine(CikisSinemasi());
     }
 
@@ -124,7 +102,6 @@ public class EndingScreen : MonoBehaviour
     {
         KontroluKes();
 
-        // Ekranı beyazlat: kapıdan çıkışın kendisi.
         if (whiteOverlay != null)
         {
             whiteOverlay.gameObject.SetActive(true);
@@ -133,29 +110,26 @@ public class EndingScreen : MonoBehaviour
             while (t < fadeSeconds)
             {
                 t += Time.deltaTime;
-                float a = Mathf.Clamp01(t / Mathf.Max(0.01f, fadeSeconds));
-                whiteOverlay.color = new Color(1f, 1f, 1f, a);
+                whiteOverlay.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t / Mathf.Max(0.01f, fadeSeconds)));
                 yield return null;
             }
             whiteOverlay.color = Color.white;
         }
 
         yield return new WaitForSeconds(holdSeconds);
-        Yaz();
         Ac();
     }
 
-    private IEnumerator HukumuGoster()
+    private IEnumerator GecikmeliGoster()
     {
-        yield return new WaitForSeconds(judgementDelay);
+        yield return new WaitForSeconds(immediateDelay);
         KontroluKes();
-        Yaz();
         Ac();
     }
 
     /// <summary>
-    /// Sinema başlayınca oyuncunun kontrolü kesiliyor: oyuncu beyazın
-    /// içinde yürümeye devam ederse an dağılıyor.
+    /// Sinema başlayınca kontrol kesiliyor: oyuncu beyazın içinde
+    /// yürümeye devam ederse an dağılıyor.
     /// </summary>
     private void KontroluKes()
     {
@@ -164,40 +138,21 @@ public class EndingScreen : MonoBehaviour
 
     private void Ac()
     {
+        if (son != null)
+        {
+            if (titleText != null) titleText.text = son.Title;
+            if (bodyText != null) bodyText.text = son.Body;
+            if (hintText != null)
+                hintText.text = son.RestartOnly
+                    ? "[" + restartKey + "] veya düğmeyle yeniden oyna"
+                    : "[" + restartKey + "] veya düğmeyle baştan oyna";
+        }
+
         if (panelRoot != null) panelRoot.SetActive(true);
         gorunur = true;
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-    }
-
-    private void Yaz()
-    {
-        switch (son)
-        {
-            case NegotiationOutcome.Passage:
-                Metin("GEÇİŞ",
-                      "Paladin kenara çekildi. Sözlerin, kemiklerinden daha ağır bastı.");
-                break;
-
-            case NegotiationOutcome.Price:
-                Metin("BEDEL",
-                      "Altınları aldı ve kapıyı açtı. Asan ve kitabın burada kalıyor; " +
-                      "dışarı çıkan sen değil, senden geriye kalan.");
-                break;
-
-            case NegotiationOutcome.Judgement:
-                Metin("HÜKÜM",
-                      "Paladin kılıcını çekti. Bu kapı, tehdit edenlere açılmaz.");
-                break;
-        }
-    }
-
-    private void Metin(string baslik, string govde)
-    {
-        if (titleText != null) titleText.text = baslik;
-        if (bodyText != null) bodyText.text = govde;
-        if (hintText != null) hintText.text = "[" + restartKey + "] veya düğmeyle yeniden oyna";
     }
 
     private void YenidenBasla()

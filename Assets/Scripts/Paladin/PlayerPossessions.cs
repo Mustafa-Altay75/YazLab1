@@ -19,40 +19,20 @@ public class PlayerPossessions : MonoBehaviour
     public const string Asa = "asa";
     public const string BuyuKitabi = "buyu_kitabi";
     public const string HucreAnahtari = "hucre_anahtari";
-    public const string Altin = "altin";
+    public const string Hirsizlar = "hirsizlar";
     public const string Yok = "yok";
 
     [Tooltip("Boş bırakılırsa aynı objedeki PlayerInventory kullanılır.")]
     [SerializeField] private PlayerInventory inventory;
 
-    [Tooltip("Oyuncunun üzerindeki altın. İskelet getirince artıyor.")]
-    [SerializeField] private int coins;
-
-    /// <summary>Taşınan altın sayısı.</summary>
-    public int Coins { get { return coins; } }
-
-    /// <summary>Altın miktarı değişince tetiklenir.</summary>
-    public event System.Action<int> CoinsChanged;
+    [Tooltip("Hırsızlar alt edildi mi diye bakılacak yer. Boşsa sahneden aranır.")]
+    [SerializeField] private GuardEncounter encounter;
 
     private void Awake()
     {
         if (inventory == null) inventory = GetComponent<PlayerInventory>();
         if (inventory == null) inventory = FindAnyObjectByType<PlayerInventory>();
-    }
-
-    public void AddCoins(int miktar)
-    {
-        if (miktar <= 0) return;
-
-        coins += miktar;
-        if (CoinsChanged != null) CoinsChanged(coins);
-    }
-
-    /// <summary>Rüşvet ödendiğinde altın elden çıkar.</summary>
-    public void SpendCoins(int miktar)
-    {
-        coins = Mathf.Max(0, coins - miktar);
-        if (CoinsChanged != null) CoinsChanged(coins);
+        if (encounter == null) encounter = FindAnyObjectByType<GuardEncounter>();
     }
 
     /// <summary>
@@ -74,8 +54,11 @@ public class PlayerPossessions : MonoBehaviour
             case HucreAnahtari:
                 return false;
 
-            case Altin:
-                return coins > 0;
+            case Hirsizlar:
+                // Taşınan bir eşya değil, yapılmış bir iş: ganimet odasına
+                // sızan iki hırsız alt edildi mi. Oyuncunun Paladin'e
+                // söyleyebileceği tek doğrulanabilir başarı bu.
+                return encounter != null && encounter.Defeated;
         }
 
         return false;
@@ -87,7 +70,6 @@ public class PlayerPossessions : MonoBehaviour
         var liste = new List<string>();
         if (Has(Asa)) liste.Add(Asa);
         if (Has(BuyuKitabi)) liste.Add(BuyuKitabi);
-        if (Has(Altin)) liste.Add(coins + " " + Altin);
 
         return liste.Count > 0 ? string.Join(" ve ", liste.ToArray()) : "hicbir sey";
     }
@@ -99,7 +81,6 @@ public class PlayerPossessions : MonoBehaviour
         if (!Has(Asa)) liste.Add(Asa);
         if (!Has(BuyuKitabi)) liste.Add(BuyuKitabi);
         liste.Add(HucreAnahtari);
-        if (!Has(Altin)) liste.Add(Altin);
 
         return liste.Count > 0 ? string.Join(" ve ", liste.ToArray()) : "hicbir sey";
     }

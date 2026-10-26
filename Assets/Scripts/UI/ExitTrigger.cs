@@ -3,14 +3,13 @@ using UnityEngine;
 /// <summary>
 /// Çıkış kapısının eşiği. Oyuncu buradan geçtiğinde oyun biter.
 ///
-/// Son ekranı artık Paladin ikna olur olmaz değil, <b>oyuncu gerçekten
-/// dışarı çıkınca</b> geliyor. Aradaki fark oynanışta büyük: kapı açılıyor,
+/// Son ekranı Paladin ikna olur olmaz değil, <b>oyuncu gerçekten dışarı
+/// çıkınca</b> geliyor. Aradaki fark oynanışta büyük: kapı açılıyor,
 /// oyuncu kendi ayağıyla yürüyüp çıkıyor, özgürlük anını o yaşıyor.
-/// Ekranın hemen basması o anı elinden alıyordu.
 ///
-/// Tetikleyici yalnızca kapıyı açan bir sona varıldıysa çalışıyor; kapı
-/// zaten kapalıyken buradan geçilemez ama hata ayıklama sırasında geçilirse
-/// oyun yanlışlıkla bitmesin.
+/// Yalnızca "kapıdan çıkılarak varılan" bir sona ulaşıldıysa çalışıyor;
+/// hangi sonların öyle olduğunu <see cref="NegotiationEnding.WaitForExit"/>
+/// söylüyor, burada sona özel kontrol yok.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class ExitTrigger : MonoBehaviour
@@ -33,10 +32,10 @@ public class ExitTrigger : MonoBehaviour
         if (tetiklendi || negotiation == null || endingScreen == null) return;
         if (other.GetComponentInParent<PlayerController>() == null) return;
 
-        var son = negotiation.Outcome;
-        if (son != NegotiationOutcome.Passage && son != NegotiationOutcome.Price) return;
+        var son = negotiation.Reached;
+        if (son == null || !son.WaitForExit) return;
 
         tetiklendi = true;
-        endingScreen.PlayExitSequence(son);
+        endingScreen.PlayExitSequence();
     }
 }

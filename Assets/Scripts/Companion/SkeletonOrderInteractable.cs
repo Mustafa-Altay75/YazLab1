@@ -35,7 +35,6 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
     [SerializeField] private string waitPrompt = "[F] Burada bekle";
     [SerializeField] private string plateFollowingPrompt = "[E] Plakaya git\n[F] Burada bekle";
     [SerializeField] private string plateIdlePrompt = "[E] Plakaya git\n[F] Beni takip et";
-    [SerializeField] private string coinPrompt = "Paladin altın istiyor\n[E] Altınları getir";
 
     private void Awake()
     {
@@ -44,6 +43,22 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
     }
 
     public string GetInteractPrompt()
+    {
+        return Bildir(YaziSec());
+    }
+
+    /// <summary>
+    /// Döndürülen yazıyı temasıyla birlikte kaydeder. Levha hangi işe
+    /// ait olduğunu buradan öğreniyor; PlayerInteraction bu bilgiyi
+    /// dışarı vermediği için.
+    /// </summary>
+    private static string Bildir(string yazi)
+    {
+        PromptThemeRegistry.Report(yazi, PromptThemeKind.Necromancy);
+        return yazi;
+    }
+
+    private string YaziSec()
     {
         // Diriltilmeden emir verilemez; o aşamada söz SkeletonInteractable'da.
         if (interactable == null || !interactable.IsResurrected) return string.Empty;
@@ -59,12 +74,6 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
         // çevirmek onu yarı yolda bırakırdı.
         if (companion.SwordOrderGiven) return string.Empty;
 
-        // Rüşvet istendiyse bütün diğer emirlerin önüne geçer: oyunun o
-        // andaki tek işi bu.
-        if (companion.CoinTaskUnlocked)
-        {
-            return companion.CoinOrderGiven ? string.Empty : coinPrompt;
-        }
 
         // İkinci görev: plaka. Plaka sahnede bağlı değilse gösterilecek bir şey yok.
         if (!companion.HasPlateTask) return string.Empty;
@@ -93,11 +102,6 @@ public class SkeletonOrderInteractable : MonoBehaviour, IInteractable
 
         if (companion.SwordOrderGiven) return;
 
-        if (companion.CoinTaskUnlocked)
-        {
-            companion.OrderToCoins();
-            return;
-        }
 
         // Anahtar görevi bittiyse E artık plakaya gönderiyor. Takip
         // modunda olması şart değil; oyuncu iskeletin yanındaysa oradan da

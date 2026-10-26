@@ -82,30 +82,7 @@ public class SkeletonContext
     /// <summary>İki vuruş arası süre (saniye).</summary>
     public float AttackCooldown { get; private set; }
 
-    // --- Dördüncü görev: rüşvet altınları ---
-    /// <summary>Toplanabilecek altınlar. Alınanlar kapatılıyor.</summary>
-    public GameObject[] Coins { get; private set; }
 
-    /// <summary>Altınların bırakılacağı nokta: Paladin'in kapısının önü.</summary>
-    public Transform CoinDropPoint { get; private set; }
-
-    /// <summary>Kaç altın toplanacak.</summary>
-    public int CoinsNeeded { get; private set; }
-
-    /// <summary>Şu ana kadar toplanan.</summary>
-    public int CoinsCollected { get; private set; }
-
-    /// <summary>Altınlar kapının önüne bırakıldı, oyuncu alabilir.</summary>
-    public bool CoinsReady { get; set; }
-
-    /// <summary>Oyuncu "altınları getir" emrini verdi mi.</summary>
-    public bool CoinOrderGiven { get; set; }
-
-    /// <summary>
-    /// İşi bitince çekileceği nokta. Paladin'in dibinde beklerse
-    /// oyuncunun etkileşim menzilini kapatıyor.
-    /// </summary>
-    public Transform RetreatPoint { get; private set; }
 
     // --- Çalışma anında değişen veri ---
     /// <summary>Anahtar alındı mı.</summary>
@@ -156,11 +133,6 @@ public class SkeletonContext
     public ISkeletonState PickUpSword { get; }
     public ISkeletonState MoveToThreat { get; }
     public ISkeletonState AttackThreat { get; }
-    public ISkeletonState MoveToCoins { get; }
-    public ISkeletonState CollectCoin { get; }
-    public ISkeletonState ReturnToPaladin { get; }
-    public ISkeletonState WaitingWithCoins { get; }
-    public ISkeletonState Retreat { get; }
 
     public SkeletonContext(
         NavMeshAgent agent,
@@ -209,11 +181,6 @@ public class SkeletonContext
         PickUpSword = new PickUpSwordState();
         MoveToThreat = new MoveToThreatState();
         AttackThreat = new AttackThreatState();
-        MoveToCoins = new MoveToCoinsState();
-        CollectCoin = new CollectCoinState();
-        ReturnToPaladin = new ReturnToPaladinState();
-        WaitingWithCoins = new WaitingWithCoinsState();
-        Retreat = new RetreatState();
     }
 
     /// <summary>
@@ -244,55 +211,6 @@ public class SkeletonContext
         AttackRange = attackRange;
         AttackDamage = attackDamage;
         AttackCooldown = attackCooldown;
-    }
-
-    /// <summary>
-    /// Rüşvet görevinin referanslarını bağlar.
-    /// </summary>
-    public void AttachCoinTask(GameObject[] coins, Transform dropPoint, Transform retreatPoint, int needed)
-    {
-        Coins = coins;
-        CoinDropPoint = dropPoint;
-        RetreatPoint = retreatPoint;
-        CoinsNeeded = needed;
-    }
-
-    /// <summary>
-    /// Henüz alınmamış, iskelete en yakın altın. Hepsi alındıysa null.
-    ///
-    /// Sırayı mesafe belirliyor, sahnedeki dizilim değil: iskelet nereden
-    /// gelirse gelsin makul bir yol izlesin.
-    /// </summary>
-    public GameObject NextCoin()
-    {
-        if (Coins == null || Agent == null) return null;
-
-        GameObject enIyi = null;
-        float enYakin = float.MaxValue;
-        Vector3 benim = Agent.transform.position;
-
-        foreach (var c in Coins)
-        {
-            if (c == null || !c.activeInHierarchy) continue;
-
-            float d = Vector3.Distance(benim, c.transform.position);
-            if (d >= enYakin) continue;
-
-            enYakin = d;
-            enIyi = c;
-        }
-
-        return enIyi;
-    }
-
-    /// <summary>En yakın altını alır ve sayacı artırır.</summary>
-    public void TakeCoin()
-    {
-        var c = NextCoin();
-        if (c == null) return;
-
-        c.SetActive(false);
-        CoinsCollected++;
     }
 
     /// <summary>

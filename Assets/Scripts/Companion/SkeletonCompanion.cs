@@ -71,19 +71,6 @@ public class SkeletonCompanion : MonoBehaviour
     [Tooltip("İki vuruş arası süre (saniye).")]
     [SerializeField] private float attackCooldown = 0.9f;
 
-    [Header("Dördüncü Görev: Rüşvet Altınları")]
-    [Tooltip("Toplanabilecek altınlar. Merkez odadaki coin objeleri.")]
-    [SerializeField] private GameObject[] coins;
-
-    [Tooltip("Altınların bırakılacağı nokta: Paladin'in kapısının önü.")]
-    [SerializeField] private Transform coinDropPoint;
-
-    [Tooltip("Altınları teslim ettikten sonra çekileceği nokta. Koridorda olmalı: " +
-             "Paladin'in dibinde beklerse oyuncunun etkileşim menzilini kapatıyor.")]
-    [SerializeField] private Transform retreatPoint;
-
-    [Tooltip("Paladin'in istediği altın sayısı. PaladinNegotiation'daki değerle aynı olmalı.")]
-    [SerializeField] private int coinsNeeded = 5;
 
     [Header("Davranış Ayarları")]
     [Tooltip("Hedefe bu mesafeden yakınsa vardı sayılır.")]
@@ -151,57 +138,7 @@ public class SkeletonCompanion : MonoBehaviour
     /// <summary>İskelet kılıcı aldı mı.</summary>
     public bool IsArmed => context != null && context.Armed;
 
-    /// <summary>Altın görevi sahnede bağlı mı.</summary>
-    public bool HasCoinTask => coins != null && coins.Length > 0 && coinDropPoint != null;
 
-    /// <summary>
-    /// Altın görevi açıldı mı. Paladin rüşvet isteyene kadar kapalı:
-    /// GateSeen ile aynı desen, oyuncu daha istenmemiş bir şeyi
-    /// toplamaya gönderemesin diye.
-    /// </summary>
-    public bool CoinTaskUnlocked { get; private set; }
-
-    /// <summary>Paladin rüşvet isteyince çağrılır.</summary>
-    public void UnlockCoinTask()
-    {
-        if (CoinTaskUnlocked) return;
-
-        CoinTaskUnlocked = true;
-        if (logTransitions) Debug.Log("Altın görevi açıldı: Paladin rüşvet istedi.", this);
-    }
-
-    /// <summary>Altın emri verildi mi.</summary>
-    public bool CoinOrderGiven => context != null && context.CoinOrderGiven;
-
-    /// <summary>Altınlar kapının önünde, oyuncu alabilir.</summary>
-    public bool CoinsReady => context != null && context.CoinsReady;
-
-    /// <summary>Toplanan altın sayısı.</summary>
-    public int CoinsCollected => context != null ? context.CoinsCollected : 0;
-
-    /// <summary>
-    /// "Altınları getir" emrini iletir. Paladin rüşvet istedikten sonra
-    /// verilebiliyor; emri veren yer rüşvet görev kutusu.
-    /// </summary>
-    public void OrderToCoins()
-    {
-        if (context == null || !HasCoinTask || !CoinTaskUnlocked) return;
-        if (context.CoinOrderGiven) return;
-
-        context.CoinOrderGiven = true;
-        context.FollowRequested = false;
-
-        if (logTransitions) Debug.Log("İskelete emir verildi: altınları getir.", this);
-    }
-
-    /// <summary>Oyuncu altınları aldığında çağrılır; iskeletin işi biter.</summary>
-    public void TakeCoinsFromSkeleton()
-    {
-        if (context == null) return;
-
-        context.CoinsReady = false;
-        context.CoinOrderGiven = false;
-    }
 
     /// <summary>
     /// "Kılıcı al" emrini iletir. Muhafızların önünden E ile çağrılıyor.
@@ -358,8 +295,6 @@ public class SkeletonCompanion : MonoBehaviour
         context.AttachSwordTask(swordObject, swordInHand, guardEncounter,
                                 attackRange, attackDamage, attackCooldown);
 
-        context.AttachCoinTask(coins, coinDropPoint, retreatPoint, coinsNeeded);
-
         // Kılıç başta elinde olmamalı; sahnede açık unutulsa bile burada kapanır.
         if (swordInHand != null) swordInHand.SetActive(false);
 
@@ -386,7 +321,7 @@ public class SkeletonCompanion : MonoBehaviour
     /// oynamak dakikalar alıyordu.
     ///
     /// Durum makinesini elle Completed'a alıyor, çünkü normal akışta oraya
-    /// kapı açıldıktan sonra gelinir ve takip, plaka, kılıç, altın
+    /// kapı açıldıktan sonra gelinir ve takip, plaka ve kılıç
     /// emirlerinin hepsi o durumdan dallanıyor.
     /// </summary>
     public void SkipKeyErrand()

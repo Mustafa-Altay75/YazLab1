@@ -84,7 +84,7 @@ public class PaladinDecision
             case "staff": return "asa";
             case "spellbook": return "buyu_kitabi";
             case "cell_key": return "hucre_anahtari";
-            case "gold": return "altin";
+            case "thieves": return "hirsizlar";
             case "none": return "yok";
         }
         return d;
@@ -155,7 +155,7 @@ public class PaladinDecision
             case "asa":            kokler = new string[] { "asa", "degnek", "staff", "stave", "wand", "rod" }; break;
             case "buyu_kitabi":    kokler = new string[] { "kitap", "kitab", "buyu", "spellbook", "grimoire", "book", "spell" }; break;
             case "hucre_anahtari": kokler = new string[] { "anahtar", "key" }; break;
-            case "altin":          kokler = new string[] { "altin", "para", "sikke", "akce", "gold", "coin", "money" }; break;
+            case "hirsizlar":      kokler = new string[] { "hirsiz", "soyguncu", "thief", "thieve", "intruder", "robber", "raider", "bandit" }; break;
             default: return true;   // tanimadigimiz bir deger varsa dokunma
         }
 

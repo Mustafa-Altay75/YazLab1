@@ -1,13 +1,19 @@
 using UnityEngine;
 
 /// <summary>
-/// Kemerin önünde yolu kesen iki muhafız ve aralarındaki kısa çarpışma.
+/// Kemerin önünde yolu kesen iki hırsız ve aralarındaki kısa çarpışma.
 ///
 /// Buranın varlık sebebi bir süs değil, bir görev boşluğu: hücre kapısı ile
 /// Paladin'in kapısı arasındaki yol boyunca oyuncunun yapacağı hiçbir şey
-/// yoktu. Muhafızlar o aralığı dolduruyor.
+/// yoktu. Hırsızlar o aralığı dolduruyor.
 ///
-/// Muhafızlar <b>özerk değildir</b> ve hiçbir yerde öyle anlatılmayacak.
+/// <b>Bunlar zindanın muhafızı değil.</b> Ganimet odasına sızmış iki hırsız;
+/// kemerin ağzını tuttukları için yolu kesiyorlar, kapıyı korudukları için
+/// değil. Bu ayrım Paladin tarafında da işe yarıyor: onları alt etmek,
+/// oyuncunun zindanı savunduğunun kanıtı oluyor ve ikna için gerçek bir koz
+/// veriyor.
+///
+/// Hırsızlar <b>özerk değildir</b> ve hiçbir yerde öyle anlatılmayacak.
 /// Yürümezler, kovalamazlar, oyuncuyu "fark etmezler"; dururlar, yolu
 /// kaparlar ve menzillerine gireni zamanlayıcıyla döverler. Projede kendi
 /// yolunu kendi planlayan tek ajan iskelet.
@@ -32,13 +38,10 @@ public class GuardEncounter : MonoBehaviour, IInteractable
 
     [Header("Yazılar")]
     [Tooltip("Retorik laf. Cevap seçeneği yok, bilerek.")]
-    [SerializeField] private string tauntText = "\"Kapıya varmanın bu kadar kolay olduğunu mu sandın?\"";
+    [SerializeField] private string tauntText = "\"Yanlış geceyi seçtin büyücü. Buradan sadece biz ve çuvallarımız çıkacak.\"";
 
     [Tooltip("Kılıç görevi bağlıyken lafın sonuna eklenir.")]
     [SerializeField] private string errandPrompt = "\n[E] İskeleti kuşanmaya gönder";
-
-    [Tooltip("İskelet kılıcı almaya gittikten sonraki yazı.")]
-    [SerializeField] private string waitingText = "\"Kemiklerini de mi çağırdın?\"";
 
     [Header("Hata Ayıklama")]
     [Tooltip("Sadece geliştirme için: açıkken muhafızlar yolu kesmez, oyuncu geçebilir. " +
@@ -99,10 +102,12 @@ public class GuardEncounter : MonoBehaviour, IInteractable
         // Yazının ekranda görünmesi, oyuncunun muhafızları görmesi demek.
         GuardsSeen = true;
 
-        if (ErrandGiven) return waitingText;
+        if (ErrandGiven) return string.Empty;
 
         // Kılıç görevi bağlı değilse [E] gösterme; basılacak bir şey yok.
-        return SwordErrandRequested != null ? tauntText + errandPrompt : tauntText;
+        string yazi = SwordErrandRequested != null ? tauntText + errandPrompt : tauntText;
+        PromptThemeRegistry.Report(yazi, PromptThemeKind.Enemy);
+        return yazi;
     }
 
     public void Interact(GameObject interactor)

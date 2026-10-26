@@ -40,7 +40,7 @@ public class OllamaClient : MonoBehaviour, ILlmClient
         "\"properties\":{" +
         "\"gerekce\":{\"type\":\"string\"}," +
         "\"claims\":{\"type\":\"array\",\"items\":{\"type\":\"string\"," +
-        "\"enum\":[\"staff\",\"spellbook\",\"cell_key\",\"gold\",\"none\"]}}," +
+        "\"enum\":[\"staff\",\"spellbook\",\"cell_key\",\"thieves\",\"none\"]}}," +
         "\"niyet\":{\"type\":\"string\",\"enum\":[\"persuade\",\"threat\",\"other\"]}," +
         "\"samimiyet\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":100}," +
         "\"replik\":{\"type\":\"string\"}}," +

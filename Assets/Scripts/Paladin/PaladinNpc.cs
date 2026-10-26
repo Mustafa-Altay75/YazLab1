@@ -18,6 +18,10 @@ public class PaladinNpc : MonoBehaviour, IInteractable
     [Tooltip("Konuşurken oyuncuya dönsün mü.")]
     [SerializeField] private bool faceInteractor = true;
 
+    [Tooltip("Pazarlık motoru. Bir sona varıldıysa Paladin artık konuşmaz. " +
+             "Boş bırakılırsa sahneden aranır.")]
+    [SerializeField] private PaladinNegotiation negotiation;
+
     /// <summary>Oyuncu konuşmak istediğinde tetiklenir. Dinleyicisi diyalog arayüzü olacak.</summary>
     public event System.Action<PaladinNpc, GameObject> DialogueRequested;
 
@@ -26,17 +30,29 @@ public class PaladinNpc : MonoBehaviour, IInteractable
 
     private bool uyariVerildi;
 
+    private void Awake()
+    {
+        if (negotiation == null) negotiation = FindAnyObjectByType<PaladinNegotiation>();
+    }
+
+    /// <summary>Pazarlık bitti mi; bittiyse Paladin'in söyleyecek sözü kalmaz.</summary>
+    private bool PazarlikBitti
+    {
+        get { return negotiation != null && negotiation.IsOver; }
+    }
+
     public string GetInteractPrompt()
     {
         // Panel açıkken aynı tuş tekrar konuşma başlatmasın.
-        if (DialogueOpen) return string.Empty;
+        if (DialogueOpen || PazarlikBitti) return string.Empty;
 
+        PromptThemeRegistry.Report(promptText, PromptThemeKind.Paladin);
         return promptText;
     }
 
     public void Interact(GameObject interactor)
     {
-        if (DialogueOpen) return;
+        if (DialogueOpen || PazarlikBitti) return;
 
         if (faceInteractor && interactor != null) OyuncuyaDon(interactor.transform.position);
 

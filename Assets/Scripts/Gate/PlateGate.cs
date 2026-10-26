@@ -101,6 +101,7 @@ public class PlateGate : MonoBehaviour, IInteractable
         // Bulmacanın açıldığı an burası.
         companion.MarkGateSeen();
 
+        PromptThemeRegistry.Report(sendPrompt, PromptThemeKind.Necromancy);
         return sendPrompt;
     }
 

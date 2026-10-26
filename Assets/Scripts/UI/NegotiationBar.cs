@@ -13,8 +13,11 @@ using UnityEngine.UI;
 /// kırmızı (HÜKÜM). Uçlar <see cref="PaladinNegotiation"/>'daki eşikler;
 /// burada sabit sayı yok, eşik değişirse çubuk da değişir.
 ///
-/// Altındaki noktalar sabrı gösteriyor: hepsi sönünce Paladin altın
-/// istiyor. Böylece üçüncü son da görünür oluyor.
+/// <b>Çubuk sohbet panelinin parçası değil.</b> Önce panelin gövdesinin
+/// içinde duruyordu ve iki ayrı şey — konuşmanın kendisi ile konuşmanın
+/// skoru — tek bir kutuya sıkışmıştı. Artık ekranın üstünde kendi başına
+/// duruyor; panel gizlenince de görünmeye devam ediyor, çünkü oyuncu
+/// oyuna dönüp geri geldiğinde nerede kaldığını hatırlaması gerekiyor.
 /// </summary>
 public class NegotiationBar : MonoBehaviour
 {
@@ -28,11 +31,9 @@ public class NegotiationBar : MonoBehaviour
     [SerializeField] private RectTransform fillNegative;
 
     [SerializeField] private TextMeshProUGUI valueText;
-    [SerializeField] private TextMeshProUGUI patienceText;
 
     [Header("Bağlantılar")]
     [SerializeField] private PaladinNegotiation negotiation;
-    [SerializeField] private DialoguePanel panel;
 
     [Header("Görünüm")]
     [SerializeField] private Color positiveColor = new Color(0.45f, 0.72f, 0.36f, 1f);
@@ -49,7 +50,6 @@ public class NegotiationBar : MonoBehaviour
     private void Awake()
     {
         if (negotiation == null) negotiation = FindAnyObjectByType<PaladinNegotiation>();
-        if (panel == null) panel = FindAnyObjectByType<DialoguePanel>();
 
         if (fillPositive != null) fillPositive.GetComponent<Image>().color = positiveColor;
         if (fillNegative != null) fillNegative.GetComponent<Image>().color = negativeColor;
@@ -62,8 +62,9 @@ public class NegotiationBar : MonoBehaviour
     {
         if (negotiation == null) { Goster(false); return; }
 
-        // Çubuk, sohbet paneli görünürken anlamlı; gizliyken ekranı meşgul etmesin.
-        bool acik = panel != null && panel.IsVisible;
+        // Konuşma başlayınca görünür, bir sona varılınca çekilir. Arada
+        // panel gizlense de kalır: pazarlık hâlâ sürüyor.
+        bool acik = negotiation.HasStarted && !negotiation.IsOver;
         Goster(acik);
         if (!acik) return;
 
@@ -85,13 +86,6 @@ public class NegotiationBar : MonoBehaviour
                 : "Öfke  " + (-negotiation.Trust) + " / " + (-negotiation.TrustToFail);
         }
 
-        // Sayıyla yazılıyor, simgeyle değil: ilk sürüm dolu/boş daire
-        // kullanıyordu ve o karakterler ana fontta yok — TMP onları yedek
-        // atlasa basıyor, o dosya da her makinede yeniden üretilip
-        // depoyu kirletiyor. Rakam hem güvenli hem de "İkna 22 / 40"
-        // satırıyla aynı biçimde okunuyor.
-        if (patienceText != null)
-            patienceText.text = "Sabır  " + negotiation.Patience + " / " + negotiation.PatienceMax;
     }
 
     private void Goster(bool acik)

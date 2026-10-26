@@ -20,11 +20,6 @@ public class StandOnPlateState : ISkeletonState
 
     public ISkeletonState Tick(SkeletonContext context)
     {
-        // Rüşvet görevi geldiyse plakadan iner. Kapı bu aşamada
-        // PaladinNegotiation tarafından açık tutuluyor, yoksa iskelet
-        // plakadan indiği an oyuncu Paladin'in odasında kilitli kalırdı.
-        if (context.CoinOrderGiven) return context.MoveToCoins;
-
         // Oyuncu takip moduna alırsa plakadan iner; kapı da kapanır.
         if (context.FollowRequested)
         {

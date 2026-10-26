@@ -79,6 +79,20 @@ public class DialoguePanel : MonoBehaviour
              "Son ekranının gecikmesiyle aynı olmalı ki son replik okunabilsin.")]
     [SerializeField] private float closeDelayOnEnding = 2.0f;
 
+    [Header("Görünüm")]
+    [Tooltip("Panel bu sürede belirip kaybolur (saniye). 0 = anında.")]
+    [SerializeField] private float fadeSeconds = 0.18f;
+
+    [Tooltip("Bekleme yazısının noktaları bu aralıkla değişir (saniye).")]
+    [SerializeField] private float thinkingTickSeconds = 0.4f;
+
+    [Tooltip("Bekleme yazısının gövdesi; sonuna nokta ekleniyor.")]
+    [SerializeField] private string thinkingLabel = "Paladin düşünüyor";
+
+    private CanvasGroup panelGroup;
+    private Coroutine solmaIsi;
+    private Coroutine dusunmeIsi;
+
     private readonly List<string> gecmis = new List<string>();
     private readonly StringBuilder ekran = new StringBuilder();
     private int configIndex;
@@ -104,8 +118,7 @@ public class DialoguePanel : MonoBehaviour
         if (inputField != null) inputField.onSubmit.AddListener(Gonder);
         if (negotiation != null)
         {
-            negotiation.BribeDemanded += RusvetIstendi;
-            negotiation.OutcomeReached += SonaUlasildi;
+            negotiation.EndingReached += SonaUlasildi;
         }
 
         if (configs != null && configs.Length > 0 && client != null) client.Config = configs[0];
@@ -121,8 +134,7 @@ public class DialoguePanel : MonoBehaviour
         if (inputField != null) inputField.onSubmit.RemoveListener(Gonder);
         if (negotiation != null)
         {
-            negotiation.BribeDemanded -= RusvetIstendi;
-            negotiation.OutcomeReached -= SonaUlasildi;
+            negotiation.EndingReached -= SonaUlasildi;
         }
     }
 
@@ -148,6 +160,17 @@ public class DialoguePanel : MonoBehaviour
 
     private void KonusmaIstendi(PaladinNpc kaynak, GameObject isteyen)
     {
+        // Pazarlık bittiyse konuşacak bir şey kalmadı. Yoksa oyuncu
+        // Paladin'e tekrar [E] basıp bitmiş bir sohbeti açıyor ve köşedeki
+        // kutu yeniden "seni bekliyor" demeye başlıyordu.
+        if (negotiation != null && negotiation.IsOver)
+        {
+            if (kaynak != null) kaynak.CloseDialogue();
+            return;
+        }
+
+        if (negotiation != null) negotiation.MarkStarted();
+
         acik = true;
         Goster();
     }
@@ -212,9 +235,50 @@ public class DialoguePanel : MonoBehaviour
         ImleciKareSonundaKilitle();
     }
 
+    /// <summary>
+    /// Paneli açar/kapatır. Sert açılıp kapanmak yerine kısa bir
+    /// solmayla: konuşma paneli oyun sırasında sık sık gizlenip geri
+    /// geliyor ve anlık sıçrama her seferinde göze batıyordu.
+    /// </summary>
     private void PaneliGoster(bool ac)
     {
-        if (panelRoot != null) panelRoot.SetActive(ac);
+        if (panelRoot == null) return;
+
+        if (panelGroup == null)
+        {
+            panelGroup = panelRoot.GetComponent<CanvasGroup>();
+            if (panelGroup == null) panelGroup = panelRoot.AddComponent<CanvasGroup>();
+        }
+
+        if (ac) panelRoot.SetActive(true);
+
+        if (fadeSeconds <= 0f || !isActiveAndEnabled)
+        {
+            panelGroup.alpha = ac ? 1f : 0f;
+            if (!ac) panelRoot.SetActive(false);
+            return;
+        }
+
+        if (solmaIsi != null) StopCoroutine(solmaIsi);
+        solmaIsi = StartCoroutine(Solma(ac));
+    }
+
+    private IEnumerator Solma(bool ac)
+    {
+        float bas = panelGroup.alpha;
+        float hedef = ac ? 1f : 0f;
+        float t = 0f;
+
+        while (t < fadeSeconds)
+        {
+            t += Time.unscaledDeltaTime;
+            panelGroup.alpha = Mathf.Lerp(bas, hedef, t / fadeSeconds);
+            yield return null;
+        }
+
+        panelGroup.alpha = hedef;
+        if (!ac) panelRoot.SetActive(false);
+        solmaIsi = null;
     }
 
     private void ImleciKareSonundaKilitle()
@@ -240,6 +304,10 @@ public class DialoguePanel : MonoBehaviour
 
         if (!acik || gorunur) { statusBox.SetActive(false); return; }
 
+        // Bitmiş pazarlıkta kutu susar; oyuncuya ne söyleyecek bir şeyi
+        // var ne de dönecek bir sohbet.
+        if (negotiation != null && negotiation.IsOver) { statusBox.SetActive(false); return; }
+
         string yazi;
         if (bekleniyor) yazi = "Paladin düşünüyor...";
         else if (okunmamisCevap) yazi = "Paladin cevap verdi";
@@ -250,24 +318,23 @@ public class DialoguePanel : MonoBehaviour
         statusBox.SetActive(true);
     }
 
-    private void RusvetIstendi(int adet)
-    {
-        sonDurumYazisi = "Paladin " + adet + " altın istiyor.\nİskelete emir ver.";
-        SatirEkle("<i>Paladin " + adet + " altın istiyor. İskeleti altınları toplamaya gönder.</i>");
-
-        // Oyuncunun yapacak bir işi var; paneli önünden çekiyoruz.
-        if (gorunur) Gizle(); else DurumKutusunuYenile();
-    }
 
     /// <summary>
     /// Bir sona varıldı. Panel hemen kapanmıyor: Paladin'in son repliği
     /// ekranda yazılı ve oyuncunun onu okuması gerekiyor. Son ekranı
     /// zaten kendi gecikmesiyle geliyor, panel de onunla birlikte çekiliyor.
     /// </summary>
-    private void SonaUlasildi(NegotiationOutcome son)
+    private void SonaUlasildi(NegotiationEnding son)
     {
         sonDurumYazisi = string.Empty;
         if (inputField != null) inputField.interactable = false;
+
+        // Konuşmanın nasıl bittiğini sohbetin kendisi söylesin. Panel
+        // kapanmadan önce ekranda duran tek yer burası; çubuğun ucuna
+        // dayanmasından başka ibare yoktu.
+        if (son != null && !string.IsNullOrEmpty(son.ChatLine)) SistemSatiri(son.ChatLine);
+
+        if (statusBox != null) statusBox.SetActive(false);
 
         if (acik && isActiveAndEnabled) StartCoroutine(SondanSonraKapat());
     }
@@ -290,14 +357,14 @@ public class DialoguePanel : MonoBehaviour
 
         if (client == null)
         {
-            SatirEkle("<i>İstemci bağlı değil.</i>");
+            SistemSatiri("İstemci bağlı değil.");
             return;
         }
 
         if (client.IsBusy) return;
 
         inputField.text = string.Empty;
-        SatirEkle("<b>Sen:</b> " + metin);
+        OyuncuSatiri(metin);
 
         bekleniyor = true;
         Dusunuyor(true);
@@ -311,7 +378,7 @@ public class DialoguePanel : MonoBehaviour
                 bekleniyor = false;
                 Dusunuyor(false);
 
-                SatirEkle("<b>Paladin:</b> " + karar.replik);
+                PaladinSatiri(karar.replik);
                 gecmis.Add("Oyuncu: " + metin);
                 gecmis.Add("Paladin: " + karar.replik);
 
@@ -327,7 +394,7 @@ public class DialoguePanel : MonoBehaviour
             {
                 bekleniyor = false;
                 Dusunuyor(false);
-                SatirEkle("<i>" + hata + "</i>");
+                SistemSatiri(hata);
                 if (!gorunur) okunmamisCevap = true;
                 DurumKutusunuYenile();
                 OdagiVer();
@@ -345,6 +412,32 @@ public class DialoguePanel : MonoBehaviour
         var sb = new StringBuilder();
         for (int i = bas; i < gecmis.Count; i++) sb.AppendLine(gecmis[i]);
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Oyuncunun sözü: sağa yaslı ve sönük.
+    ///
+    /// İki ses de aynı hizada ve aynı parlaklıktaydı; göz konuşmayı
+    /// takip edemiyordu. Hizayı ayırmak, rengi ayırmaktan çok daha
+    /// hızlı okunuyor.
+    /// </summary>
+    private void OyuncuSatiri(string metin)
+    {
+        SatirEkle("<align=right><color=#8E8778><size=85%>SEN</size></color>\n<color=#B9B2A1>" +
+                  metin + "</color></align>");
+    }
+
+    /// <summary>Paladin'in sözü: sola yaslı, parlak, adı tema renginde.</summary>
+    private void PaladinSatiri(string metin)
+    {
+        SatirEkle("<color=#D9CBA0><size=85%><b>PALADİN</b></size></color>\n<color=#F0E8D6>" +
+                  metin + "</color>");
+    }
+
+    /// <summary>Oyunun kendi notu: ortada, soluk, italik.</summary>
+    private void SistemSatiri(string metin)
+    {
+        SatirEkle("<align=center><color=#7E786C><size=85%><i>" + metin + "</i></size></color></align>");
     }
 
     private void SatirEkle(string satir)
@@ -372,8 +465,33 @@ public class DialoguePanel : MonoBehaviour
 
     private void Dusunuyor(bool acikMi)
     {
-        if (thinkingIndicator != null) thinkingIndicator.SetActive(acikMi && gorunur);
+        bool goster = acikMi && gorunur;
+
+        if (thinkingIndicator != null) thinkingIndicator.SetActive(goster);
         if (inputField != null) inputField.interactable = !acikMi;
+
+        if (dusunmeIsi != null) { StopCoroutine(dusunmeIsi); dusunmeIsi = null; }
+        if (goster && isActiveAndEnabled) dusunmeIsi = StartCoroutine(NoktalariOynat());
+    }
+
+    /// <summary>
+    /// Bekleme yazısının noktalarını döndürür.
+    ///
+    /// Yanıt yirmi saniye sürüyor ve sabit bir yazı o süre boyunca
+    /// "oyun dondu mu" hissi veriyordu. Kıpırdayan üç nokta, beklemenin
+    /// sürdüğünü söylemenin en ucuz yolu.
+    /// </summary>
+    private IEnumerator NoktalariOynat()
+    {
+        var yazi = thinkingIndicator != null ? thinkingIndicator.GetComponent<TextMeshProUGUI>() : null;
+        int n = 0;
+
+        while (true)
+        {
+            if (yazi != null) yazi.text = thinkingLabel + new string('.', 1 + (n % 3));
+            n++;
+            yield return new WaitForSecondsRealtime(thinkingTickSeconds);
+        }
     }
 
     private void OdagiVer()
@@ -391,7 +509,7 @@ public class DialoguePanel : MonoBehaviour
         configIndex = (configIndex + 1) % configs.Length;
         client.Config = configs[configIndex];
         EtiketiYenile();
-        SatirEkle("<i>Model değişti: " + client.ModelName + "</i>");
+        SistemSatiri("Model değişti: " + client.ModelName);
         OdagiVer();
     }
 
