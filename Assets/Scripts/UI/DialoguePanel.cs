@@ -400,6 +400,10 @@ public class DialoguePanel : MonoBehaviour
                 // Sayaçlar en sonda: sona varıldıysa replik ekranda kalsın.
                 if (negotiation != null) negotiation.Apply(karar);
 
+                // Döküm, güven güncellendikten sonra kaydediliyor; önce
+                // çağrılsaydı turun güven değişimi bir tur geriden gelirdi.
+                DialogueTranscript.Kaydet(metin, karar, olcum);
+
                 OdagiVer();
             },
             (hata) =>

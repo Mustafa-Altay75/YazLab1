@@ -24989,6 +24989,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1362420122}
   - component: {fileID: 1362420121}
+  - component: {fileID: 1362420124}
+  - component: {fileID: 1362420123}
   m_Layer: 0
   m_Name: TestShortcuts
   m_TagString: Untagged
@@ -25035,6 +25037,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1362420123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362420120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1af63cc2f76d08d4185514967101c1db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueTranscript
+  active: 1
+  toggleKey: 96
+  scenarioLabel: 
+--- !u!114 &1362420124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362420120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8518b7bdd9324e34aa98885e203b4253, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ErrandTimer
+  active: 1
+  companion: {fileID: 0}
+  showOnScreen: 1
+  failKey: 97
+  giveUpSeconds: 120
 --- !u!1 &1365430684 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 579312bba475f3447b88761d0c66faca, type: 3}
