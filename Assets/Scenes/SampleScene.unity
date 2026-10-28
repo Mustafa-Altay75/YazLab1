@@ -4831,10 +4831,10 @@ RectTransform:
   m_Father: {fileID: 975717297}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -24}
-  m_SizeDelta: {x: -48, y: 20}
-  m_Pivot: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 24, y: -16}
+  m_SizeDelta: {x: 240, y: 20}
+  m_Pivot: {x: 0, y: 1}
 --- !u!222 &252134989
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4897,7 +4897,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 4
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 4096
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -18381,6 +18381,7 @@ RectTransform:
   - {fileID: 1012384157}
   - {fileID: 2048128148}
   - {fileID: 252134988}
+  - {fileID: 1706660622}
   - {fileID: 345321721}
   - {fileID: 1250005110}
   - {fileID: 709808453}
@@ -22077,6 +22078,7 @@ MonoBehaviour:
   inputField: {fileID: 1250005113}
   thinkingIndicator: {fileID: 345321720}
   modelLabel: {fileID: 252134990}
+  keyHintLabel: {fileID: 1706660623}
   statusBox: {fileID: 1838480547}
   statusText: {fileID: 1823814939}
   paladin: {fileID: 762630498}
@@ -22085,10 +22087,7 @@ MonoBehaviour:
   disableWhileVisible:
   - {fileID: 1802516489}
   - {fileID: 1802516492}
-  configs:
-  - {fileID: 11400000, guid: 547dc2766613ea6438f22ad95789b73d, type: 2}
-  - {fileID: 11400000, guid: 5606b04a5bb0ebd4482867b9ca043c24, type: 2}
-  switchModelKey: 95
+  toggleConnectionKey: 95
   historyTurns: 2
   showKey: 31
   hideKey: 60
@@ -25009,7 +25008,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f855338ca3c1ca544a48a54554de62f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestShortcuts
-  active: 0
+  active: 1
   openCellDoor: 1
   clearGuards: 1
   openPlateGate: 1
@@ -27635,6 +27634,11 @@ MonoBehaviour:
   logCalls: 1
   rawLogPath: 
   frameRateWhileThinking: 15
+  forceOffline: 0
+  repairSuffix: '
+
+
+    Your previous answer was not valid JSON. Answer again. Return the JSON object only, with no text before or after it.'
 --- !u!4 &1574879958
 Transform:
   m_ObjectHideFlags: 0
@@ -29804,6 +29808,143 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5502833, y: 1.1257926, z: 0.5502833}
   m_Center: {x: -0.000000014901161, y: 0.16785063, z: -0.00000013411045}
+--- !u!1 &1706660621
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1706660622}
+  - component: {fileID: 1706660624}
+  - component: {fileID: 1706660623}
+  m_Layer: 0
+  m_Name: KeyHints
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1706660622
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706660621}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 975717297}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -24, y: -16}
+  m_SizeDelta: {x: 240, y: 20}
+  m_Pivot: {x: 1, y: 1}
+--- !u!114 &1706660623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706660621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "[F2] ba\u011Flant\u0131   [Escape] gizle"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4286621880
+  m_fontColor: {r: 0.941, g: 0.902, b: 0.8, a: 0.55}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 12
+  m_fontSizeBase: 12
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 4
+  m_VerticalAlignment: 4096
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656bu
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1706660624
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706660621}
+  m_CullTransparentMesh: 1
 --- !u!1001 &1707269407
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32733,14 +32874,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PaladinNegotiation
   possessions: {fileID: 1802516496}
   intruders: {fileID: 1710179790}
+  skeleton: {fileID: 0}
   endings:
   - {fileID: 1889025881}
   - {fileID: 309863488}
   trustToPass: 40
   trustToFail: -40
-  persuasionDivisor: 5
+  persuasionDivisor: 8
   irrelevantPenalty: 2
-  threatPenalty: 15
+  threatPenalty: 60
+  firstThreatPenalty: 10
   honestClaimBonus: 5
   liePenalty: 25
   startingTrust: 5

@@ -39,8 +39,13 @@ public class DialoguePanel : MonoBehaviour
     [Tooltip("Yanıt beklenirken görünen yazı.")]
     [SerializeField] private GameObject thinkingIndicator;
 
-    [Tooltip("Hangi modelin konuştuğunu gösteren etiket.")]
+    [Tooltip("Solda duran durum etiketi: modelin adı ya da ÇEVRİMDIŞI MOD.")]
     [SerializeField] private TextMeshProUGUI modelLabel;
+
+    [Tooltip("Sağda duran tuş ipuçları. Durum etiketinden ayrı tutuluyor: " +
+             "ikisi tek yazıyken ÇEVRİMDIŞI MOD uzayıp ortadaki başlığın " +
+             "üstüne biniyordu.")]
+    [SerializeField] private TextMeshProUGUI keyHintLabel;
 
     [Header("Gizliyken Görünen Kutu")]
     [SerializeField] private GameObject statusBox;
@@ -54,12 +59,16 @@ public class DialoguePanel : MonoBehaviour
     [Tooltip("Panel GÖRÜNÜRKEN kapatılacak oyuncu bileşenleri. Gizlenince geri açılıyor.")]
     [SerializeField] private MonoBehaviour[] disableWhileVisible;
 
-    [Header("Model Karşılaştırma")]
-    [Tooltip("Oyun içinde geçilebilecek model ayarları. İlki varsayılan.")]
-    [SerializeField] private LlmConfig[] configs;
-
-    [Tooltip("Modeli sırayla değiştiren tuş. Tab kullanılamaz: yazı kutusunda odak değiştiriyor.")]
-    [SerializeField] private Key switchModelKey = Key.F2;
+    [Header("Bağlantı")]
+    [Tooltip("Ollama bağlantısını kesip açan tuş. Sunumda dayanıklılığı canlı " +
+             "göstermek için: basınca model devre dışı kalıyor, oyun çevrimdışı " +
+             "modla sürüyor, tekrar basınca Paladin geri dönüyor.\n" +
+             "Harf tuşu olamaz: bu tuş panel AÇIKKEN, yani oyuncu yazarken " +
+             "okunuyor; cümlenin içindeki her harf bağlantıyı kesip açardı. " +
+             "Tab da olmaz, yazı kutusunda odak değiştiriyor. Insert denendi " +
+             "ve bırakıldı: bu makinede sayı tuşuyla paylaşımlı. Dizüstünde " +
+             "F sırası medya tuşuysa Fn+F2 ile basılıyor.")]
+    [SerializeField] private Key toggleConnectionKey = Key.F2;
 
     [Header("Davranış")]
     [Tooltip("Modele bağlam olarak verilecek en fazla kaç tur.")]
@@ -95,12 +104,12 @@ public class DialoguePanel : MonoBehaviour
 
     private readonly List<string> gecmis = new List<string>();
     private readonly StringBuilder ekran = new StringBuilder();
-    private int configIndex;
     private bool acik;
     private bool gorunur;
     private bool bekleniyor;
     private bool okunmamisCevap;
     private string sonDurumYazisi = string.Empty;
+    private bool sonBagKopuk;
 
     /// <summary>Son çağrının ölçümü. Rapor için okunabilsin diye dışarı açık.</summary>
     public LlmCallStats LastStats { get; private set; }
@@ -120,8 +129,6 @@ public class DialoguePanel : MonoBehaviour
         {
             negotiation.EndingReached += SonaUlasildi;
         }
-
-        if (configs != null && configs.Length > 0 && client != null) client.Config = configs[0];
 
         acik = false;
         PaneliGoster(false);
@@ -155,7 +162,7 @@ public class DialoguePanel : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current[switchModelKey].wasPressedThisFrame) ModelDegistir();
+        if (Keyboard.current[toggleConnectionKey].wasPressedThisFrame) BaglantiyiDegistir();
     }
 
     private void KonusmaIstendi(PaladinNpc kaynak, GameObject isteyen)
@@ -309,7 +316,8 @@ public class DialoguePanel : MonoBehaviour
         if (negotiation != null && negotiation.IsOver) { statusBox.SetActive(false); return; }
 
         string yazi;
-        if (bekleniyor) yazi = "Paladin düşünüyor...";
+        if (client != null && client.Offline && !bekleniyor) yazi = "Bağ koptu — ÇEVRİMDIŞI MOD";
+        else if (bekleniyor) yazi = "Paladin düşünüyor...";
         else if (okunmamisCevap) yazi = "Paladin cevap verdi";
         else if (!string.IsNullOrEmpty(sonDurumYazisi)) yazi = sonDurumYazisi;
         else yazi = "Paladin bekliyor";
@@ -378,7 +386,11 @@ public class DialoguePanel : MonoBehaviour
                 bekleniyor = false;
                 Dusunuyor(false);
 
-                PaladinSatiri(karar.replik);
+                if (karar.cevrimdisi) AnlatimSatiri(karar.replik);
+                else PaladinSatiri(karar.replik);
+
+                BagDurumunuBildir();
+
                 gecmis.Add("Oyuncu: " + metin);
                 gecmis.Add("Paladin: " + karar.replik);
 
@@ -432,6 +444,36 @@ public class DialoguePanel : MonoBehaviour
     {
         SatirEkle("<color=#D9CBA0><size=85%><b>PALADİN</b></size></color>\n<color=#F0E8D6>" +
                   metin + "</color>");
+    }
+
+    /// <summary>
+    /// Çevrimdışı turun satırı: Paladin'in ağzından değil, oyunun ağzından.
+    ///
+    /// Model yokken Paladin'e hazır replik söyletmek, LLM çıktısının
+    /// taklidi diye okunabilirdi (NOT-5). Üçüncü şahıs, tırnaksız bir
+    /// sahne tarifi ise hazır olduğunu kendisi söylüyor; üstelik ekranda
+    /// ÇEVRİMDIŞI MOD yazıyor.
+    /// </summary>
+    private void AnlatimSatiri(string metin)
+    {
+        SatirEkle("<align=center><color=#8A8578><size=90%><i>" + metin + "</i></size></color></align>");
+    }
+
+    /// <summary>
+    /// Bağlantı durumu değiştiyse sohbete bir kez not düşer. Her turda
+    /// tekrarlamak sohbeti boğardı; yalnızca geçişler yazılıyor.
+    /// </summary>
+    private void BagDurumunuBildir()
+    {
+        if (client == null) return;
+        if (client.Offline == sonBagKopuk) return;
+
+        sonBagKopuk = client.Offline;
+        SistemSatiri(sonBagKopuk
+            ? "Paladin'le bağın zayıfladı. Sözlerini duyuyor ama karşılık veremiyor."
+            : "Bağ yeniden kuruldu. Paladin yeniden konuşuyor.");
+
+        EtiketiYenile();
     }
 
     /// <summary>Oyunun kendi notu: ortada, soluk, italik.</summary>
@@ -501,21 +543,47 @@ public class DialoguePanel : MonoBehaviour
         inputField.Select();
     }
 
-    private void ModelDegistir()
+    /// <summary>
+    /// Ollama bağlantısını keser ya da geri açar.
+    ///
+    /// Eskiden bu tuş modeli değiştiriyordu. Model karşılaştırması
+    /// ölçülüp rapora yazıldıktan sonra oyun içinde geçiş yapmanın bir
+    /// değeri kalmadı; bağlantıyı canlı kesebilmek ise sunumda hata
+    /// yönetimini anlatmanın en kısa yolu.
+    ///
+    /// Bir sonraki tura etki ediyor, o anki isteğe değil: beklemede olan
+    /// bir çağrı varken tuş çalışmıyor.
+    /// </summary>
+    private void BaglantiyiDegistir()
     {
-        if (configs == null || configs.Length < 2 || client == null) return;
-        if (client.IsBusy) return;
+        if (client == null || client.IsBusy) return;
 
-        configIndex = (configIndex + 1) % configs.Length;
-        client.Config = configs[configIndex];
+        client.ForceOffline = !client.ForceOffline;
+
+        // Otomatik bildirimle çakışmasın: bir sonraki tur aynı durumu
+        // ikinci kez duyurmasın diye işaret burada da güncelleniyor.
+        sonBagKopuk = client.ForceOffline;
+
+        SistemSatiri(client.ForceOffline
+            ? "Ollama bağlantısı kesildi. Paladin sözlerini duyuyor ama karşılık veremiyor."
+            : "Ollama bağlantısı yeniden açıldı. Paladin bir sonraki sözünde konuşacak.");
+
         EtiketiYenile();
-        SistemSatiri("Model değişti: " + client.ModelName);
         OdagiVer();
     }
 
     private void EtiketiYenile()
     {
         if (modelLabel == null || client == null) return;
-        modelLabel.text = client.ModelName + "   [" + switchModelKey + "] model   [" + hideKey + "] gizle";
+        // ForceOffline bir tercih, Offline bir sonuç: ikisinden biri
+        // yeterli. Tuşa basıldığı anda etiketin değişmesi için tercihe de
+        // bakılıyor, yoksa oyuncu bir tur boyunca eski etiketi görürdü.
+        bool kopuk = client.Offline || client.ForceOffline;
+        modelLabel.text = kopuk ? "<color=#C98D74>ÇEVRİMDIŞI MOD</color>" : client.ModelName;
+
+        // Tuşlar alanlardan okunuyor, sahneye elle yazılmıyor: tuş
+        // değişirse ipucu da kendiliğinden değişsin.
+        if (keyHintLabel != null)
+            keyHintLabel.text = "[" + toggleConnectionKey + "] bağlantı   [" + hideKey + "] gizle";
     }
 }

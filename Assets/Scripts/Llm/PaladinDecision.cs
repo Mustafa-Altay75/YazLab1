@@ -48,6 +48,15 @@ public class PaladinDecision
     public string[] claims;
 
     /// <summary>
+    /// Bu karar modelden değil, çevrimdışı yedek değerlendiriciden geldi.
+    ///
+    /// Şemada yok; modelden gelen JSON bu alanı hiç doldurmuyor, yalnızca
+    /// yedek değerlendirici işaretliyor. Arayüz buna bakıp Paladin'in
+    /// ağzından replik basmak yerine anlatım satırı yazıyor.
+    /// </summary>
+    [System.NonSerialized] public bool cevrimdisi;
+
+    /// <summary>
     /// Modelin İngilizce etiketlerini oyunun kendi değerlerine çevirir.
     ///
     /// Sebep ölçüm: İngilizce talimat + Türkçe etiket değerleri karışımı
@@ -143,6 +152,34 @@ public class PaladinDecision
         return dusen;
     }
 
+    /// <summary>
+    /// Oyuncunun cümlesinde anılan iddiaları çıkarır.
+    ///
+    /// Çevrimdışı değerlendirici bunu kullanıyor. Köklerin tek bir yerde
+    /// durması önemli: model varken eleme, model yokken çıkarma aynı
+    /// listeden yapılıyor, yani ikisi birbirinden ayrı düşemiyor.
+    /// </summary>
+    public static string[] IddialariCikar(string playerText)
+    {
+        if (string.IsNullOrEmpty(playerText)) return new string[] { "yok" };
+
+        var kelimeler = Kelimeler(playerText);
+        var bulunan = new System.Collections.Generic.List<string>();
+
+        string[] hepsi = { "asa", "buyu_kitabi", "hucre_anahtari", "hirsizlar" };
+        foreach (var iddia in hepsi)
+            if (CumledeGeciyorMu(iddia, kelimeler)) bulunan.Add(iddia);
+
+        if (bulunan.Count == 0) bulunan.Add("yok");
+        return bulunan.ToArray();
+    }
+
+    /// <summary>Metni aksansız küçük harfe indirip kelimelere ayırır. Yedek değerlendirici de kullanıyor.</summary>
+    public static System.Collections.Generic.List<string> KelimelereAyir(string metin)
+    {
+        return Kelimeler(metin);
+    }
+
     /// <summary>Bir eşyanın cümlede anılıp anılmadığı.</summary>
     private static bool CumledeGeciyorMu(string iddia, System.Collections.Generic.List<string> kelimeler)
     {
@@ -159,12 +196,49 @@ public class PaladinDecision
             default: return true;   // tanimadigimiz bir deger varsa dokunma
         }
 
+        bool anildi = false;
         foreach (var k in kelimeler)
+        {
             foreach (var kok in kokler)
-                if (k.StartsWith(kok)) return true;
+            {
+                if (!k.StartsWith(kok)) continue;
+                anildi = true;
+                break;
+            }
+            if (anildi) break;
+        }
+
+        if (!anildi) return false;
+
+        // Hırsızlar taşınan bir eşya değil, yapılmış bir iş. Onlardan
+        // bahsetmek o işi yaptığını iddia etmek değildir.
+        //
+        // Ölçülen hata: oyuncu "the thieves gave it to me" yazdı, model
+        // claims=["thieves"] döndü, burası yalnızca "thieves" kelimesini
+        // aradığı için kabul etti ve hırsızlar gerçekten alt edildiği için
+        // ödül verildi. Oysa oyuncu tam tersini söylüyordu. Artık cümlede
+        // alt etmeyi anlatan bir fiil de aranıyor.
+        if (iddia != "hirsizlar") return true;
+
+        foreach (var k in kelimeler)
+            foreach (var fiil in AltEtmeFiilleri)
+                if (k.StartsWith(fiil)) return true;
 
         return false;
     }
+
+    /// <summary>
+    /// Hırsızları alt etmeyi anlatan fiiller. Yalnızca <c>hirsizlar</c>
+    /// iddiası için aranıyor; eksik kalması iddiayı düşürür, asla
+    /// uydurmaz.
+    /// </summary>
+    private static readonly string[] AltEtmeFiilleri =
+    {
+        "oldur", "gebert", "yendim", "yendik", "alt", "durdur", "temizle",
+        "hallet", "bitirdim", "devirdi", "indirdi", "kesti", "kestim",
+        "kill", "slew", "slay", "slain", "defeat", "beat", "stopped",
+        "put", "finished", "cut", "struck", "downed", "dealt"
+    };
 
     /// <summary>Metni aksansız küçük harfe indirip kelimelere ayırır.</summary>
     private static System.Collections.Generic.List<string> Kelimeler(string metin)

@@ -61,6 +61,20 @@ public class OllamaClient : MonoBehaviour, ILlmClient
              "ölçüldü: 15'e çekmek 2.0 token/sn'yi 3.8'e çıkardı.")]
     [SerializeField] private int frameRateWhileThinking = 15;
 
+    [Header("Çevrimdışı Mod")]
+    [Tooltip("Açıkken model hiç denenmez, doğrudan yedek değerlendiriciye düşülür.\n" +
+             "İki işi var: Ollama kurulu olmayan bir makinede oyunun tamamı " +
+             "oynanabilsin, ve sunumda bağlantı canlı kesilip dayanıklılık " +
+             "gösterilebilsin. Oyun içinde diyalog panelindeki tuşla da açılıp " +
+             "kapanıyor; başlangıç değeri kapalı olmalı.")]
+    [SerializeField] private bool forceOffline;
+
+    [Tooltip("Bozuk JSON gelince gönderilecek tek onarım isteğinin eki.")]
+    [TextArea(2, 4)]
+    [SerializeField] private string repairSuffix =
+        "\n\nYour previous answer was not valid JSON. Answer again. " +
+        "Return the JSON object only, with no text before or after it.";
+
     private int eskiKareHizi;
     private int eskiVSync;
 
@@ -68,6 +82,36 @@ public class OllamaClient : MonoBehaviour, ILlmClient
     private Coroutine aktifCoroutine;
 
     public bool IsBusy { get { return aktifCoroutine != null; } }
+
+    /// <summary>
+    /// Son tur yedek değerlendiriciyle mi sonuçlandı. Arayüz buna bakıp
+    /// <c>ÇEVRİMDIŞI MOD</c> etiketini gösteriyor.
+    ///
+    /// Her turda yeniden hesaplanıyor: Ollama sonradan açılırsa bir
+    /// sonraki turda kendiliğinden siliniyor ve Paladin yeniden konuşuyor.
+    /// </summary>
+    public bool Offline { get; private set; }
+
+    /// <summary>
+    /// Bağlantı elle kesildi mi.
+    ///
+    /// <see cref="Offline"/> bir turun <i>sonucunu</i> söylüyor, bu ise
+    /// bir <i>tercihi</i>: açıkken model hiç denenmiyor. Sunumda kapatıp
+    /// açmak için diyalog paneli bunu değiştiriyor.
+    /// </summary>
+    public bool ForceOffline
+    {
+        get { return forceOffline; }
+        set
+        {
+            forceOffline = value;
+
+            // Elle geri acildiginda son turun sonucu da siliniyor ki etiket
+            // hemen modele donsun. Bir sonraki tur gercegi yazacak: sunucu
+            // hala kapaliysa yine cevrimdisina dusulur.
+            if (!value) Offline = false;
+        }
+    }
 
     public string ModelName
     {
@@ -79,6 +123,13 @@ public class OllamaClient : MonoBehaviour, ILlmClient
     {
         get { return config; }
         set { if (!IsBusy) config = value; }
+    }
+
+    private void Awake()
+    {
+        // Editörde statik alanlar oyunlar arası yaşayabiliyor; anlatım
+        // sırası yeni oyunda baştan başlasın.
+        KeywordEvaluator.Sifirla();
     }
 
     public void Ask(string playerText, string history, string gameState,
@@ -114,12 +165,28 @@ public class OllamaClient : MonoBehaviour, ILlmClient
         CpuyuModeleBirak(false);
     }
 
-    private IEnumerator Gonder(string playerText, string history, string gameState,
-                               System.Action<PaladinDecision, LlmCallStats> onResult,
-                               System.Action<string> onError)
+    /// <summary>Tek bir HTTP çağrısının sonucu. Merdivenin basamakları bunu paylaşıyor.</summary>
+    private class IstekSonucu
     {
-        string prompt = PromptKur(playerText, history, gameState);
-        string govde = IstekGovdesi(prompt);
+        /// <summary>Sunucuya hiç ulaşılamadı, zaman aşıldı ya da HTTP hatası döndü.</summary>
+        public bool agHatasi;
+
+        /// <summary>Oyuncuya gösterilebilecek tek cümlelik sebep.</summary>
+        public string sebep;
+
+        /// <summary>Başarılıysa ham gövde.</summary>
+        public string ham;
+
+        public float saniye;
+    }
+
+    /// <summary>
+    /// Modele giden tek çağrı. Hatayı yorumlamıyor, yalnızca raporluyor;
+    /// ne yapılacağına <see cref="Gonder"/> karar veriyor.
+    /// </summary>
+    private IEnumerator Istek(string govde, System.Action<IstekSonucu> bitti)
+    {
+        var sonuc = new IstekSonucu();
 
         var istek = new UnityWebRequest(config.endpoint, UnityWebRequest.kHttpVerbPOST);
         istek.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(govde));
@@ -128,64 +195,67 @@ public class OllamaClient : MonoBehaviour, ILlmClient
         istek.timeout = Mathf.Max(1, Mathf.CeilToInt(config.timeoutSeconds));
         aktifIstek = istek;
 
-        CpuyuModeleBirak(true);
-
         float basladi = Time.realtimeSinceStartup;
         yield return istek.SendWebRequest();
-        float gecen = Time.realtimeSinceStartup - basladi;
+        sonuc.saniye = Time.realtimeSinceStartup - basladi;
 
-        CpuyuModeleBirak(false);
-
-        aktifCoroutine = null;
         aktifIstek = null;
 
         if (istek.result != UnityWebRequest.Result.Success)
         {
-            // Unity zaman aşımını da ConnectionError diye raporluyor, o yüzden
-            // ikisini istek.error metnine bakarak ayırıyoruz. Yanlış teşhis,
-            // teşhis koymamaktan beterdir: ilk denemede "sunucu çalışıyor mu"
-            // yazıyordu ve sunucu gayet çalışıyordu.
-            bool zamanAsimi = !string.IsNullOrEmpty(istek.error) &&
-                              istek.error.ToLower().Contains("timeout");
-
-            string sebep = zamanAsimi
-                ? "Paladin düşünmesini " + config.timeoutSeconds.ToString("F0") + " saniyede bitiremedi."
-                : (istek.result == UnityWebRequest.Result.ConnectionError
-                    ? "Ollama'ya ulaşılamadı (" + istek.error + "). Sunucu çalışıyor mu?"
-                    : "Model yanıt vermedi: " + istek.error);
-
-            if (logCalls) Debug.LogWarning("OllamaClient: " + sebep + " (" + gecen.ToString("F1") + " sn)", this);
-
+            sonuc.agHatasi = true;
+            sonuc.sebep = HataSebebi(istek);
+            if (logCalls)
+                Debug.LogWarning("OllamaClient: " + sonuc.sebep +
+                                 " (" + sonuc.saniye.ToString("F1") + " sn)", this);
             istek.Dispose();
-            if (onError != null) onError(sebep);
+            bitti(sonuc);
             yield break;
         }
 
-        string ham = istek.downloadHandler.text;
+        sonuc.ham = istek.downloadHandler.text;
         istek.Dispose();
+        bitti(sonuc);
+    }
 
-        HamKaydet(govde, ham);
+    /// <summary>
+    /// Üç hata türü ayrı ayrı adlandırılıyor; şartname bunu istiyor ve
+    /// yanlış teşhis, teşhis koymamaktan beterdir. Unity zaman aşımını da
+    /// ConnectionError diye raporladığı için ayrımı metinden yapıyoruz:
+    /// ilk sürüm, sunucu gayet çalışırken "sunucu çalışıyor mu" diyordu.
+    /// </summary>
+    private string HataSebebi(UnityWebRequest istek)
+    {
+        bool zamanAsimi = !string.IsNullOrEmpty(istek.error) &&
+                          istek.error.ToLower().Contains("timeout");
 
+        if (zamanAsimi)
+            return "Paladin düşünmesini " + config.timeoutSeconds.ToString("F0") +
+                   " saniyede bitiremedi.";
+
+        if (istek.responseCode == 404)
+            return "Model sunucuda yok: " + config.model + " çekilmemiş.";
+
+        if (istek.result == UnityWebRequest.Result.ConnectionError)
+            return "Ollama sunucusuna ulaşılamadı (" + istek.error + ").";
+
+        return "Model yanıt vermedi: " + istek.error;
+    }
+
+    /// <summary>
+    /// Ham gövdeden geçerli bir karar çıkarmayı dener. Çıkaramazsa null.
+    /// </summary>
+    private PaladinDecision KararCikar(string ham, string playerText)
+    {
         OllamaYanit dis = null;
         try { dis = JsonUtility.FromJson<OllamaYanit>(ham); }
         catch (System.Exception e) { Debug.LogWarning("OllamaClient: dış JSON okunamadı: " + e.Message, this); }
 
-        if (dis == null || string.IsNullOrEmpty(dis.response))
-        {
-            if (onError != null) onError("Sunucudan boş yanıt geldi.");
-            yield break;
-        }
+        if (dis == null || string.IsNullOrEmpty(dis.response)) return null;
 
         PaladinDecision karar = null;
         try { karar = JsonUtility.FromJson<PaladinDecision>(dis.response); }
         catch (System.Exception e) { Debug.LogWarning("OllamaClient: şema JSON'u okunamadı: " + e.Message, this); }
-
-        var olcum = new LlmCallStats
-        {
-            seconds = gecen,
-            tokens = dis.eval_count,
-            model = config.model
-        };
 
         // Çeviri doğrulamadan ÖNCE: Gecerli() oyunun kendi değerlerini
         // bekliyor, modelden İngilizce etiket gelirse hepsi geçersiz sayılır.
@@ -194,20 +264,119 @@ public class OllamaClient : MonoBehaviour, ILlmClient
         if (karar == null || !karar.Gecerli())
         {
             if (logCalls) Debug.LogWarning("OllamaClient: şemaya uymayan yanıt: " + dis.response, this);
-            if (onError != null) onError("Model anlaşılmayan bir yanıt verdi.");
-            yield break;
+            return null;
         }
 
         // Çıktıyı kendi girdisine karşı denetle: oyuncunun hiç anmadığı
-        // eşyayı iddia olarak saymayalım. Burada yapılıyor ki ölçüm
-        // koşucusu da dahil her çağrı aynı denetimden geçsin.
+        // eşyayı iddia olarak saymayalım.
         int dusen = karar.IddialariDogrula(playerText);
         if (dusen > 0 && logCalls)
             Debug.Log("OllamaClient: oyuncunun cumlesinde gecmeyen " + dusen + " iddia dusuruldu.", this);
 
+        return karar;
+    }
+
+    /// <summary>
+    /// Modelden geçerli bir yanıt alınamadı: kararı yedek değerlendirici
+    /// veriyor. <b>Hata değil, bir sonuç</b> — bu yüzden onError değil
+    /// onResult çağrılıyor ve oyun kaldığı yerden sürüyor.
+    /// </summary>
+    private void Yedege(string playerText, string sebep,
+                        System.Action<PaladinDecision, LlmCallStats> onResult)
+    {
+        Offline = true;
+
+        var karar = KeywordEvaluator.Degerlendir(playerText);
+        var olcum = new LlmCallStats { seconds = 0f, tokens = 0, model = "çevrimdışı" };
+
+        if (logCalls) Debug.LogWarning("OllamaClient: ÇEVRİMDIŞI MOD — " + sebep, this);
+        if (onResult != null) onResult(karar, olcum);
+    }
+
+    /// <summary>
+    /// Üç basamaklı merdiven: şema kısıtlı istek, sonra tek bir onarım
+    /// isteği, sonra yedek değerlendirici. Her tur en baştan başlıyor,
+    /// yani Ollama sonradan açılırsa Paladin kendiliğinden yeniden
+    /// konuşuyor.
+    /// </summary>
+    private IEnumerator Gonder(string playerText, string history, string gameState,
+                               System.Action<PaladinDecision, LlmCallStats> onResult,
+                               System.Action<string> onError)
+    {
+        if (forceOffline)
+        {
+            aktifCoroutine = null;
+            Yedege(playerText, "forceOffline açık (hata ayıklama).", onResult);
+            yield break;
+        }
+
+        string prompt = PromptKur(playerText, history, gameState);
+        string govde = IstekGovdesi(prompt);
+
+        CpuyuModeleBirak(true);
+
+        // 1. basamak: şema kısıtlı istek.
+        IstekSonucu s1 = null;
+        yield return Istek(govde, r => s1 = r);
+
+        PaladinDecision karar = null;
+        float gecen = s1.saniye;
+        int token = 0;
+
+        if (!s1.agHatasi)
+        {
+            HamKaydet(govde, s1.ham);
+            karar = KararCikar(s1.ham, playerText);
+            token = TokenSayisi(s1.ham);
+        }
+
+        // 2. basamak: gövde geldi ama şemaya uymuyor. Tek bir onarım isteği.
+        if (karar == null && !s1.agHatasi)
+        {
+            if (logCalls) Debug.LogWarning("OllamaClient: yanıt şemaya uymadı, onarım isteniyor.", this);
+
+            IstekSonucu s2 = null;
+            yield return Istek(IstekGovdesi(prompt + repairSuffix), r => s2 = r);
+
+            gecen += s2.saniye;
+            if (!s2.agHatasi)
+            {
+                HamKaydet("--- ONARIM ISTEGI ---", s2.ham);
+                karar = KararCikar(s2.ham, playerText);
+                token = TokenSayisi(s2.ham);
+            }
+        }
+
+        CpuyuModeleBirak(false);
+        aktifCoroutine = null;
+
+        // 3. basamak: hâlâ yoksa yedek değerlendirici.
+        if (karar == null)
+        {
+            Yedege(playerText, s1.agHatasi ? s1.sebep : "Model şemaya uymayan yanıt verdi.", onResult);
+            yield break;
+        }
+
+        Offline = false;
+
+        var olcum = new LlmCallStats { seconds = gecen, tokens = token, model = config.model };
         if (logCalls) Debug.Log("OllamaClient: " + olcum + "  ->  " + karar, this);
 
         if (onResult != null) onResult(karar, olcum);
+    }
+
+    /// <summary>Ham gövdeden token sayısını okur; okunamazsa sıfır.</summary>
+    private static int TokenSayisi(string ham)
+    {
+        try
+        {
+            var dis = JsonUtility.FromJson<OllamaYanit>(ham);
+            return dis != null ? dis.eval_count : 0;
+        }
+        catch (System.Exception)
+        {
+            return 0;
+        }
     }
 
     /// <summary>
