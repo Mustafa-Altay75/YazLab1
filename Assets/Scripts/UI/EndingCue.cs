@@ -73,8 +73,20 @@ public class EndingCue : MonoBehaviour
     private void SonaUlasildi(NegotiationEnding son)
     {
         if (son == null || !isActiveAndEnabled) return;
-        StartCoroutine(Oynat(son));
+
+        // Önce öncekinden kalanı temizle. Normal oynanışta tek son olduğu
+        // için fark etmiyor, ama ölçüm koşucusu senaryoları tek oturumda
+        // art arda koşuyor ve GEÇİŞ'ten kalan görev şeridi HÜKÜM ekranının
+        // üstünde asılı kalıyordu.
+        if (isi != null) StopCoroutine(isi);
+        if (cueRoot != null) cueRoot.SetActive(false);
+        if (objectiveRoot != null) objectiveRoot.SetActive(false);
+        if (cueGroup != null) cueGroup.alpha = 0f;
+
+        isi = StartCoroutine(Oynat(son));
     }
+
+    private Coroutine isi;
 
     private IEnumerator Oynat(NegotiationEnding son)
     {

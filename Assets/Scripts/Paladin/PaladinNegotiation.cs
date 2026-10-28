@@ -30,6 +30,10 @@ public class PaladinNegotiation : MonoBehaviour
              "ve oyuncunun en güçlü ikna kozu oluyor.")]
     [SerializeField] private GuardEncounter intruders;
 
+    [Tooltip("İskeletin diriltilip diriltilmediğini bilen bileşen. Paladin iskeletin " +
+             "büyücüye ait olduğunu bilmeli. Boşsa sahneden aranır.")]
+    [SerializeField] private SkeletonInteractable skeleton;
+
     [Tooltip("Sonlar. SIRA ÖNEMLİ: koşulu sağlanan ilk son kazanır.")]
     [SerializeField] private NegotiationEnding[] endings;
 
@@ -41,19 +45,32 @@ public class PaladinNegotiation : MonoBehaviour
     [SerializeField] private int trustToFail = -40;
 
     [Header("Güven Değişimleri")]
-    [Tooltip("İkna niyetinde samimiyet bu sayıya bölünüp eklenir.")]
-    [SerializeField] private int persuasionDivisor = 5;
+    [Tooltip("İkna niyetinde samimiyet bu sayıya bölünüp eklenir.\n" +
+             "5 iken, sınıflandırma düzeldikten sonra konuşma İKİ turda bitiyordu: " +
+             "temiz bir ikna +20 getiriyor ve eşik 40. Eskiden yanlış sınıflandırma " +
+             "oyunu kazara zorlaştırıyordu; düzelince zorluk da gitti.\n" +
+             "8 ile samimiyeti 100 olan oyuncu üç, 80 olan dört turda geçiyor. " +
+             "Paladin'in tonunun soğuktan yumuşamaya geçmesi için gereken en az yer " +
+             "bu kadar; 10 da denendi ama konuşmayı gereğinden uzun yapıyordu.")]
+    [SerializeField] private int persuasionDivisor = 8;
 
     [Tooltip("Alakasız her turda düşen güven.")]
     [SerializeField] private int irrelevantPenalty = 2;
 
-    [Tooltip("Tehdit turunda sabit düşüş; üstüne samimiyetin dörtte biri eklenir.")]
-    [SerializeField] private int threatPenalty = 15;
+    [Tooltip("İKİNCİ ve sonraki tehditlerin cezası; üstüne samimiyetin dörtte biri eklenir. " +
+             "Yalandan ağır olmalı: yalan konuşmayı sürdürmektir, tehdit bitirme girişimidir.")]
+    [SerializeField] private int threatPenalty = 60;
+
+    [Tooltip("İLK tehdidin cezası. Bilerek küçük: sınıflandırma %70 dolayında doğru ve " +
+             "tek bir yanlış 'tehdit' etiketi ikna eşiğinin çoğunu siliyordu. Tekrar, " +
+             "elimizdeki tek güven ölçüsü — Paladin bir kez uyarır, ikincisinde kılıcını çeker.")]
+    [SerializeField] private int firstThreatPenalty = 10;
 
     [Tooltip("Doğrulanmış iddia başına kazanç.")]
     [SerializeField] private int honestClaimBonus = 5;
 
-    [Tooltip("Yakalanan yalan başına kayıp.")]
+    [Tooltip("Yakalanan yalan başına kayıp. Her yalanda katlanıyor: ilki bu kadar, " +
+             "ikincisi iki katı. Bir kez şaşırmakla ısrar etmek aynı şey değil.")]
     [SerializeField] private int liePenalty = 25;
 
     [Tooltip("Başlangıç güveni. Sıfırdan biraz yukarıda: ilk cümlede çubuk kıpırdasın.")]
@@ -66,6 +83,9 @@ public class PaladinNegotiation : MonoBehaviour
 
     /// <summary>Yakalanan yalan sayısı.</summary>
     public int LieCount { get; private set; }
+
+    /// <summary>Tehdit sayılan tur sayısı. İlki uyarı, sonrası ağır.</summary>
+    public int ThreatCount { get; private set; }
 
     /// <summary>Konuşma bitti mi.</summary>
     public bool IsOver { get { return Reached != null; } }
@@ -96,6 +116,7 @@ public class PaladinNegotiation : MonoBehaviour
     {
         if (possessions == null) possessions = FindAnyObjectByType<PlayerPossessions>();
         if (intruders == null) intruders = FindAnyObjectByType<GuardEncounter>();
+        if (skeleton == null) skeleton = FindAnyObjectByType<SkeletonInteractable>();
         Trust = startingTrust;
     }
 
@@ -129,8 +150,11 @@ public class PaladinNegotiation : MonoBehaviour
                     continue;
                 }
 
-                Trust -= liePenalty;
+                // Katlanan ceza: ilk yalan bir kat, ikincisi iki kat. Ölçümde
+                // ısrarcı yalancı tek katla eşiğe hiç inmiyordu, oysa kurgunun
+                // cezalandırmak istediği şey tam olarak ısrar.
                 LieCount++;
+                Trust -= liePenalty * LieCount;
                 sonYalan = iddia;
             }
         }
@@ -143,7 +167,14 @@ public class PaladinNegotiation : MonoBehaviour
                 break;
 
             case "tehdit":
-                Trust -= threatPenalty + karar.samimiyet / 4;
+                // İlki uyarı, sonrası hüküm. Samimiyet yalnızca ikinciden
+                // itibaren işin içine giriyor: tehdit turlarında ölçülen
+                // samimiyet değerleri 0 ile 100 arasında savruluyor, yani
+                // ilk tehdidi onunla ağırlaştırmak gürültüyü büyütürdü.
+                ThreatCount++;
+                Trust -= ThreatCount == 1
+                    ? firstThreatPenalty
+                    : threatPenalty + karar.samimiyet / 4;
                 break;
 
             default:
@@ -197,6 +228,14 @@ public class PaladinNegotiation : MonoBehaviour
         if (intruders != null && intruders.Defeated)
             sb.AppendLine("- Two thieves broke into the treasure room tonight. They are dead now, " +
                           "and this sorcerer is the one who put them down. You know this.");
+
+        // İskeletin kime ait olduğu. Ölçümde Paladin iskeletleri kendi
+        // yaratıkları sanıp "benim ölülerime zarar veremezsin" diyordu.
+        // Bir olgu olarak veriliyor, yargı olarak değil: yargı cümleleri
+        // WHAT YOU KNOW bloğuna girince sınıflandırmayı bozuyor (26.10 ölçümü).
+        if (skeleton != null && skeleton.IsResurrected)
+            sb.AppendLine("- The skeleton walking with him is his own. He raised it from the " +
+                          "dead to get out of his cell. It has never been yours.");
 
         if (!string.IsNullOrEmpty(sonYalan))
             sb.AppendLine("- A moment ago he claimed " + YalanMetni(sonYalan) +
