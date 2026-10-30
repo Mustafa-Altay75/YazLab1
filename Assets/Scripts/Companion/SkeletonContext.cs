@@ -106,6 +106,18 @@ public class SkeletonContext
     /// <summary>Kılıç alındı mı.</summary>
     public bool Armed { get; set; }
 
+    /// <summary>
+    /// <see cref="Blocked"/>'a hangi görevden düşüldüğü.
+    ///
+    /// Tıkanan iskeletin nereye döneceğini bu belirliyor. Eskiden
+    /// <c>HasKey</c>'e bakılıyordu, ama o yalnızca anahtar görevini biliyor:
+    /// plakaya ya da kılıca giderken tıkanan iskelet hücre kapısına geri
+    /// yürüyordu. Kendini toparlıyordu, çünkü kapıdan sonra
+    /// <c>Completed</c> görev bayrağını yeniden görüyordu, ama arada bütün
+    /// zindanı dolaşıyordu.
+    /// </summary>
+    public ISkeletonState KesilenGorev { get; set; }
+
     /// <summary>Kaç kez takıldığı. Testlerde ve raporda kullanılıyor.</summary>
     public int StuckCount { get; private set; }
 

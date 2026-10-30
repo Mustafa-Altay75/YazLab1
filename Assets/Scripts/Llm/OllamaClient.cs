@@ -69,6 +69,18 @@ public class OllamaClient : MonoBehaviour, ILlmClient
              "kapanıyor; başlangıç değeri kapalı olmalı.")]
     [SerializeField] private bool forceOffline;
 
+    [Header("Isıtma")]
+    [Tooltip("Açıkken sahne başlarken modele sessiz bir çağrı yapılır. " +
+             "Sebebi ölçüldü: model bellekte değilken ilk soru, yüklenme + 1937 tokenlik " +
+             "sistem promptunun işlenmesi + şema kısıtlı üretim yüzünden 90 saniyelik zaman " +
+             "aşımını aşıyor ve oyuncunun ilk cümlesi çevrimdışına düşüyordu. Ollama prompt " +
+             "önekini önbelleğe aldığı için ısıtmadan sonraki turlar ~35 saniye.")]
+    [SerializeField] private bool warmUpOnStart = true;
+
+    [Tooltip("Isıtma isteğinin kendi zaman aşımı. Oyuncunun turundan uzun olmalı: " +
+             "bu çağrının işi zaten yavaş olan ilk yüklenmeyi üstlenmek.")]
+    [SerializeField] private float warmUpTimeoutSeconds = 300f;
+
     [Tooltip("Bozuk JSON gelince gönderilecek tek onarım isteğinin eki.")]
     [TextArea(2, 4)]
     [SerializeField] private string repairSuffix =
@@ -130,6 +142,47 @@ public class OllamaClient : MonoBehaviour, ILlmClient
         // Editörde statik alanlar oyunlar arası yaşayabiliyor; anlatım
         // sırası yeni oyunda baştan başlasın.
         KeywordEvaluator.Sifirla();
+    }
+
+    /// <summary>
+    /// Sahne açılışında modeli sessizce ısıtır.
+    ///
+    /// Oyuncuya hiçbir şey göstermiyor, oyunun durumuna dokunmuyor ve
+    /// <see cref="IsBusy"/>'yi meşgul etmiyor: oyuncu ısıtma sürerken
+    /// konuşmaya başlarsa isteği reddedilmesin diye kendi isteğini ayrı
+    /// tutuyor. Başarısız olursa da bir şey yapmıyor; <see cref="Offline"/>
+    /// işaretlenmiyor, çünkü bu bir tur değil.
+    /// </summary>
+    private IEnumerator Start()
+    {
+        if (!warmUpOnStart || forceOffline || config == null) yield break;
+        yield return Isit();
+    }
+
+    private IEnumerator Isit()
+    {
+        // Tek token isteniyor: pahalı olan üretim değil, sistem promptunun
+        // işlenmesi ve modelin belleğe alınması. İkisi de bu çağrıda oluyor.
+        string govde = IstekGovdesi("merhaba", 1);
+
+        using (var istek = new UnityWebRequest(config.endpoint, UnityWebRequest.kHttpVerbPOST))
+        {
+            istek.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(govde));
+            istek.downloadHandler = new DownloadHandlerBuffer();
+            istek.SetRequestHeader("Content-Type", "application/json");
+            istek.timeout = Mathf.Max(1, Mathf.CeilToInt(warmUpTimeoutSeconds));
+
+            float basladi = Time.realtimeSinceStartup;
+            yield return istek.SendWebRequest();
+            float gecen = Time.realtimeSinceStartup - basladi;
+
+            if (!logCalls) yield break;
+
+            if (istek.result == UnityWebRequest.Result.Success)
+                Debug.Log("OllamaClient: model ısıtıldı (" + gecen.ToString("F1") + " sn).", this);
+            else
+                Debug.Log("OllamaClient: ısıtma başarısız, oyun etkilenmiyor: " + istek.error, this);
+        }
     }
 
     public void Ask(string playerText, string history, string gameState,
@@ -443,6 +496,11 @@ public class OllamaClient : MonoBehaviour, ILlmClient
 
     private string IstekGovdesi(string prompt)
     {
+        return IstekGovdesi(prompt, config.numPredict);
+    }
+
+    private string IstekGovdesi(string prompt, int tokenSiniri)
+    {
         var sb = new StringBuilder();
         sb.Append("{");
         sb.Append("\"model\":\"").Append(JsonKacis(config.model)).Append("\",");
@@ -454,7 +512,7 @@ public class OllamaClient : MonoBehaviour, ILlmClient
         sb.Append("\"format\":").Append(Sema).Append(",");
         sb.Append("\"options\":{\"temperature\":")
           .Append(config.temperature.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))
-          .Append(",\"num_predict\":").Append(config.numPredict).Append("}");
+          .Append(",\"num_predict\":").Append(tokenSiniri).Append("}");
         sb.Append("}");
         return sb.ToString();
     }

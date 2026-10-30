@@ -359,6 +359,11 @@ public class SkeletonCompanion : MonoBehaviour
 
         if (next != null && next != currentState)
         {
+            // Tıkanmadan önce hangi görevdeydik: Blocked buraya dönecek.
+            // Tek yerde tutuluyor, yoksa dört ayrı durum aynı satırı
+            // yazmak zorunda kalırdı.
+            if (next == context.Blocked) context.KesilenGorev = currentState;
+
             currentState.Exit(context);
 
             if (logTransitions)
