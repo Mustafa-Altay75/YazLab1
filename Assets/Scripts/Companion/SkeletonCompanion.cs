@@ -307,6 +307,39 @@ public class SkeletonCompanion : MonoBehaviour
         currentState.Enter(context);
     }
 
+    /// <summary>
+    /// Ajanı bir kez kapatıp açarak NavMesh üzerinde yeniden oluşturur.
+    ///
+    /// Build'de <c>NavMeshAgent.OnEnable</c>, <c>NavMeshSurface</c>'in bake
+    /// edilmiş veriyi yüklemesinden <b>önce</b> çalışabiliyor. O anda ortada
+    /// NavMesh olmadığı için ajan hiç oluşmuyor ve oyun boyunca
+    /// <c>isOnNavMesh</c> false kalıyor — bu sınıftaki her hareket çağrısı o
+    /// bayrakla korunduğu için iskelet tek adım atmıyor.
+    ///
+    /// Editörde görünmüyor, çünkü NavMesh edit modunda zaten yüklü oluyor.
+    /// Yalnızca standalone build'in günlüğünde tek satır olarak çıkıyordu:
+    /// <i>"Failed to create agent because there is no valid NavMesh"</i>.
+    ///
+    /// Unity bütün <c>OnEnable</c>'ları bütün <c>Start</c>'lardan önce
+    /// çalıştırıyor; yani Start anında yüzey veriyi çoktan kaydetmiş oluyor.
+    /// Ajanı burada yeniden etkinleştirmek sırayı garanti altına alıyor.
+    /// Ajan zaten oturmuşsa (editör durumu) hiçbir şey yapılmıyor.
+    /// </summary>
+    private void Start()
+    {
+        if (agent == null || agent.isOnNavMesh) return;
+
+        agent.enabled = false;
+        agent.enabled = true;
+
+        if (!agent.isOnNavMesh)
+        {
+            Debug.LogWarning(
+                "İskelet NavMesh üzerine oturtulamadı. Yüzeyin bake edilmiş " +
+                "olduğunu ve iskeletin NavMesh üstünde durduğunu kontrol edin.", this);
+        }
+    }
+
     private void OnDestroy()
     {
         if (guardEncounter != null) guardEncounter.SwordErrandRequested -= MuhafizlarKilicIstedi;
