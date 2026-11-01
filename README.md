@@ -5,6 +5,7 @@
 - **Ekip:** Muhammed Taha Sarıkaya, Mustafa Altay
 - **Unity:** 6000.6.3f1
 - **Yerel model:** Ollama `llama3.2:3b`
+- **Tarih:** 1.11.2026 
 
 ---
 
@@ -298,6 +299,39 @@ kendi sayaçlarına uygulanıyor, sonu **kod** açıyor.
 
 `DialoguePanel` somut istemciyi değil **`ILlmClient` arayüzünü** tanıyor; çevrimdışı yol da bu
 sayede tek satır değiştirmeden takılabildi.
+
+### Model seçimi — neden `llama3.2:3b`
+
+Seçimi donanım belirledi. Geliştirme ve ölçüm makinesi bir dizüstü: **ASUS VivoBook X515EA —
+Intel Core i5-1135G7 @ 2.40 GHz, 12 GB RAM (11.7 GB kullanılabilir, 3200 MT/sn), Intel Iris Xe
+tümleşik grafik (128 MB ayrılmış).** Ayrı bir ekran kartı ve ayrı bir VRAM havuzu yok; yani
+model GPU'ya yüklenemiyor, **çıkarım CPU'da yürüyor** ve oyunun kendisiyle aynı çekirdekleri
+paylaşıyor. Belirleyici kısıt bu: modelin tek başına hızlı olması değil, oyun koşarken
+makineye sığması gerekiyordu.
+
+Bu kısıt altında proje dokümanının önerdiği küçük ve quantize modeller arasından
+`llama3.2:3b` seçildi:
+
+- **Belleğe sığıyor ve bellekte kalabiliyor.** 4-bit quantize ağırlıklar ~2 GB. Windows, Unity
+  editörü, oyun ve Ollama aynı 12 GB'ı paylaştığı için model `keep_alive: 30m` ile bellekte
+  tutulabiliyor. İki katından fazla yer kaplayan bir model her turda yeniden yüklenir ve
+  gecikme turdan tura katlanırdı.
+- **CPU paylaşımı ölçüldü ve koda yansıdı.** Model ile oyun aynı çekirdekler için yarıştığından,
+  istek sürerken oyunun kare hızı bilerek 15'e çekiliyor (`frameRateWhileThinking`,
+  `OllamaClient.CpuyuModeleBirak`). Aynı cümle ve aynı modelle ölçüldü: **serbest kare hızında
+  2.0 token/sn, 15'e çekilince 3.8 token/sn** — neredeyse iki katı. Oyuncu o sırada zaten
+  *"Paladin düşünüyor…"* yazısına bakıyor, 60 kare çizmenin bir faydası yok.
+- **Gecikme karşılanabilir çıktı.** Isınmış modelde tur başına 27–55 sn (§4). İstek asenkron
+  olduğu için oyun donmuyor; panel gizlenip oyuna dönülebiliyor.
+- **Isınma maliyeti tek seferlik.** Ollama prompt önekini önbelleğe aldığından aynı promptla ilk
+  çağrı 16.1 sn, ikincisi 7.7 sn sürüyor. Tamamen soğuk makinede ısıtma 121.6 sn; bu yüzden
+  sahne açılışında sessiz bir ısıtma çağrısı yapılıyor (§4).
+- **Şema kısıtlı üretimi destekliyor.** Karar `format` alanıyla JSON şemasına bağlanıyor;
+  ayrıştırma kırılgan serbest metin eşleştirmesine değil bu şemaya dayanıyor.
+
+Bedeli ölçüldü ve kabul edildi: 3B modelin Türkçe replikleri bozuk çıkıyor, bu yüzden paladin
+İngilizce konuşuyor ("Dil kararı", §6). Daha büyük bir model bunu tek başına çözer; bu
+donanımda maliyeti gecikme.
 
 ### `prompt` üç parçadan kuruluyor, bu sırayla
 
