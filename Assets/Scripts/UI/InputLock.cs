@@ -3,7 +3,7 @@
 ///
 /// Diyalog paneli açıkken klavye metin kutusuna ait oluyor. Oyuncunun
 /// bileşenlerini (hareket, etkileşim) kapatmak yeterli değil: iskeletin
-/// takip tuşunu okuyan SkeletonCompanion ve saldırıyı okuyan PlayerAttack
+/// takip tuşunu okuyan SkeletonCompanion ve saldırıyı okuyan PlayerCombat
 /// klavyeyi doğrudan dinliyor. Panelde "faydasız" yazarken iskeletin
 /// takibe geçmesi ya da boşluk tuşunun büyü atması bu yüzden mümkündü.
 ///

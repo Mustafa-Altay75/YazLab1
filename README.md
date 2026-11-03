@@ -47,6 +47,12 @@ kilit bayrağını yalnızca `OpenDoor()` temizliyor — onu da yalnızca iskele
 kılıca gönderiyor; iskelet kuşanıp muhafızlara yürüyor ve çarpışıyor. Muhafızlar düşünce
 iskelet kendiliğinden takip moduna dönüyor.
 
+**Oyuncunun kendi saldırısı bu engeli aşmıyor.** Sandıktan çıkan asa kuşanıldıktan sonra sol
+tıkla büyü mermisi fırlatılabiliyor (Space ile de zıplanıyor), ama muhafızların canı baştan
+`Invulnerable` işaretli ve o bayrağı **yalnızca** iskelet kılıcıyla yanlarına vardığında
+`GuardEncounter.BeginFight()` temizliyor. Yani oyuncu istediği kadar ateş etsin, iskelet
+gelmeden tek puan hasar işlemiyor — iki kapı gibi bu engel de ajanın sırtında.
+
 Bu ikisi aslında muhafız değil: zindana bir şekilde girmiş, muhafız rolü yapan **hırsızlar**.
 Yanı başlarındaki ganimet odasının altınla dolu olmasının sebebi bu. Senaryonun bu yanı
 sonradan yazılmadı — sistem promptundaki iddia sözlüğünde `thieves` değeri baştan duruyor ve
@@ -1006,7 +1012,8 @@ denemenin yolu bu.
 | **W A S D** | hareket |
 | **Fare** | kamera |
 | **E** | etkileşim (not, anahtar, sandık, kapı, iskelet, paladin) |
-| **Sol tık** / **Space** | saldırı |
+| **Sol tık** | saldırı — asanın ucundan büyü mermisi çıkar, menzildeki hedef hasar alır (asa kuşanılmadan çalışmaz) |
+| **Space** | zıpla |
 | **F** | iskeleti takip moduna al / bırak |
 | **Q** | diyalog panelini geri getir (panel gizliyken) |
 | **Esc** | diyalog panelini gizle — konuşma kapanmaz, geçmiş durur |

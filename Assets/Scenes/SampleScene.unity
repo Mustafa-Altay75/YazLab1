@@ -10355,7 +10355,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
   target: {fileID: 1802516491}
-  height: 1.4
+  height: 1.15
   distance: 3.2
   sensitivityX: 0.15
   sensitivityY: 0.15
@@ -28141,6 +28141,59 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4, y: 0.30000067, z: 4}
   m_Center: {x: 0, y: -0.050000004, z: 0}
+--- !u!1 &911643725
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 911643726}
+  - component: {fileID: 911643727}
+  m_Layer: 0
+  m_Name: DaisBlocker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &911643726
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911643725}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.075, y: 1.15, z: 59.95}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 958813921}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &911643727
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911643725}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.41, y: 1.3, z: 2.2}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &918327812 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 1aa018d80b37c9740aadc6d87e0ca3bd, type: 3}
@@ -29377,6 +29430,7 @@ Transform:
   m_Children:
   - {fileID: 1924290117}
   - {fileID: 960240913}
+  - {fileID: 911643726}
   m_Father: {fileID: 1482578335}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &960240912
@@ -35863,6 +35917,7 @@ MonoBehaviour:
   disableWhileVisible:
   - {fileID: 1802516489}
   - {fileID: 1802516492}
+  - {fileID: 1802516497}
   toggleConnectionKey: 95
   historyTurns: 2
   showKey: 31
@@ -37821,15 +37876,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.7
+      value: 0.56
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.70000005
+      value: 0.56
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.7
+      value: 0.56
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -38440,7 +38495,7 @@ MonoBehaviour:
   disableOnCinematic:
   - {fileID: 1802516489}
   - {fileID: 1802516492}
-  - {fileID: 1802516494}
+  - {fileID: 0}
   - {fileID: 330585548}
   fadeSeconds: 1.6
   holdSeconds: 1.4
@@ -44738,8 +44793,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 3}
+  m_Size: {x: 1, y: 2.2, z: 1}
+  m_Center: {x: 0, y: 1.1, z: 0}
 --- !u!95 &1585690084
 Animator:
   serializedVersion: 7
@@ -46045,15 +46100,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.8
+      value: 0.64
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.8
+      value: 0.64
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.8
+      value: 0.64
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalPosition.x
@@ -46166,13 +46221,13 @@ PrefabInstance:
       addedObject: {fileID: 1802516495}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1802516494}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1802516496}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1802516497}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1802516498}
   m_SourcePrefab: {fileID: 100100000, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
 --- !u!1 &1627657611
 GameObject:
@@ -50905,25 +50960,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
   staffInRightHand: {fileID: 1961365406}
   spellbookInLeftHand: {fileID: 265296641}
---- !u!114 &1802516494
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1802516487}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8fb626bf9108b949829091d71d30a84, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerAttack
-  damage: 10
-  attackRange: 2.6
-  attackAngle: 80
-  cooldown: 0.6
-  inventory: {fileID: 0}
-  requireArmed: 1
-  logHits: 1
 --- !u!114 &1802516495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50974,6 +51010,22 @@ MonoBehaviour:
   maxAimDistance: 50
   animator: {fileID: 0}
   inventory: {fileID: 0}
+--- !u!208 &1802516498
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1802516487}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 0
+  m_Extents: {x: 0.5, y: 1, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 1, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!1001 &1803819428
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -26,10 +26,10 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
-        // Envanter kontrolü: Asa alýnmadýysa büyü atýlmaz
+        // Envanter kontrolÃ¼: Asa alÄ±nmadÄ±ysa bÃ¼yÃ¼ atÄ±lmaz
         if (inventory != null && !inventory.IsArmed) return;
 
-        // Sol týk kontrolü
+        // Sol tÄ±k kontrolÃ¼
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             if (Time.time >= lastAttackTime + attackCooldown)
@@ -53,11 +53,11 @@ public class PlayerCombat : MonoBehaviour
 
         if (mainCamera == null) mainCamera = Camera.main;
 
-        // 1. Ekranýn tam ortasýndan (Crosshair) düz bir ýþýn at
+        // 1. EkranÄ±n tam ortasÄ±ndan (Crosshair) dÃ¼z bir Ä±ÅŸÄ±n at
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         Vector3 targetPoint;
 
-        // Karakterin kendi gövdesini vurmamak için RaycastAll ile tara
+        // Karakterin kendi gÃ¶vdesini vurmamak iÃ§in RaycastAll ile tara
         RaycastHit[] hits = Physics.RaycastAll(ray, maxAimDistance);
         RaycastHit closestValidHit = default;
         float closestDist = float.MaxValue;
@@ -89,11 +89,11 @@ public class PlayerCombat : MonoBehaviour
         // 2. Namlu (FirePoint) pozisyonunu belirle
         Vector3 spawnPosition = (firePoint != null) ? firePoint.position : transform.position + Vector3.up * 1.2f + transform.forward * 0.5f;
 
-        // 3. Namludan hedef noktaya yön hesapla
+        // 3. Namludan hedef noktaya yÃ¶n hesapla
         Vector3 shootDirection = (targetPoint - spawnPosition).normalized;
         Quaternion projectileRotation = Quaternion.LookRotation(shootDirection);
 
-        // 4. Mermiyi oluþtur
+        // 4. Mermiyi oluÅŸtur
         Instantiate(projectilePrefab, spawnPosition, projectileRotation);
     }
 }
