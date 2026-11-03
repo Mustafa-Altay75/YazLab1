@@ -4,8 +4,9 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement")]
-    [SerializeField] private float moveSpeed = 5f;
+    [Header("Movement Speeds")]
+    [SerializeField] private float walkSpeed = 2.5f;
+    [SerializeField] private float runSpeed = 5.5f;
     [SerializeField] private float rotationSpeed = 12f;
 
     [Header("Jump & Gravity")]
@@ -47,6 +48,8 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector3 moveDirection = Vector3.zero;
+        float currentSpeed = 0f;
+        float animSpeedValue = 0f;
 
         if (input.sqrMagnitude > 0.01f)
         {
@@ -60,29 +63,34 @@ public class PlayerController : MonoBehaviour
             moveDirection = forward * input.y + right * input.x;
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+
+            // Shift tuşuna basılı tutuluyorsa KOŞ, basılmıyorsa YÜRÜ
+            // (Varsayılan koşu olsun istersen Shift basılıyken yürüyecek şekilde tersine çevirebilirsin)
+            bool isRunning = Keyboard.current != null && (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
+
+            currentSpeed = isRunning ? runSpeed : walkSpeed;
+            animSpeedValue = isRunning ? 1.0f : 0.5f;
         }
 
-        controller.Move(moveDirection * (moveSpeed * Time.deltaTime));
+        controller.Move(moveDirection * (currentSpeed * Time.deltaTime));
 
         if (animator != null)
         {
-            animator.SetFloat(SpeedHash, input.magnitude);
+            // Animator'a yumuşak geçiş için Lerp veya doğrudan değer
+            animator.SetFloat(SpeedHash, animSpeedValue, 0.1f, Time.deltaTime);
         }
     }
 
     private void HandleJumpAndGravity()
     {
-        // Karakterin yer algısını hem CharacterController hem de Raycast ile garantiye alıyoruz
         bool isGrounded = controller.isGrounded ||
                           Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector3.down, groundCheckDistance);
 
-        // Yerdeyken basamak atlamasını ve zemine tutunmayı sağla
         if (isGrounded && verticalVelocity.y < 0f)
         {
             verticalVelocity.y = -2f;
         }
 
-        // Space tuşuna basıldığı an bekleme yapmadan zıplamayı tetikle
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
         {
             verticalVelocity.y = jumpForce;
@@ -94,7 +102,6 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // Yerçekimini uygula
         verticalVelocity.y += gravity * Time.deltaTime;
         controller.Move(verticalVelocity * Time.deltaTime);
     }

@@ -37876,15 +37876,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.56
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.56
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.56
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d5574db79fd070a46a1bd54fb5e2d5f7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -46100,15 +46100,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.64
+      value: 0.73
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.64
+      value: 0.73
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.64
+      value: 0.73
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 10df8e1ef3a40df4ebb078ee450a3466, type: 3}
       propertyPath: m_LocalPosition.x
@@ -50894,7 +50894,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74f6f25d2e8f51149832ecad405599cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  moveSpeed: 5
+  walkSpeed: 3
+  runSpeed: 5.1
   rotationSpeed: 14
   jumpForce: 5
   gravity: -15
